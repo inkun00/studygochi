@@ -1,0 +1,27 @@
+---
+description: Fetch 호출 시 allowlist 사용 필수
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Fetch Allowlist 규칙
+
+## 원칙
+- 모든 `fetch()` 호출은 `src/lib/fetch-allowlist.ts`에 등록된 엔드포인트만 사용합니다.
+- 새 API 호출 추가 시 반드시 `fetch-allowlist.ts`에 해당 URL을 등록하세요.
+
+## 사용 예시
+```typescript
+// ❌ BAD - 하드코딩된 URL
+await fetch('/api/gemini/exam', { ... });
+await fetch('https://api.tosspayments.com/v1/payments/confirm', { ... });
+
+// ✅ GOOD - allowlist 사용
+import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
+await fetch(FETCH_ALLOWLIST.api.geminiExam(), { ... });
+await fetch(FETCH_ALLOWLIST.external.tossPaymentsConfirm, { ... });
+```
+
+## 추가 시 절차
+1. `src/lib/fetch-allowlist.ts`의 `FETCH_ALLOWLIST`에 새 엔드포인트 추가
+2. 해당 fetch 호출 코드에서 allowlist 상수 사용

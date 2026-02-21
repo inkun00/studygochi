@@ -4,22 +4,38 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "db:migrate": "node scripts/run-migrations.js",
+    "db:migrate:manual": "node -e \"const p=require('path');console.log('\\n마이그레이션 파일:', p.resolve('supabase/apply-all-migrations.sql'));console.log('\\nSupabase Dashboard > SQL Editor에서 위 파일 내용 붙여넣고 실행하세요.')\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@imgly/background-removal-node": "^1.4.5",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
+    "@tosspayments/tosspayments-sdk": "^2.5.0",
+    "lucide-react": "^0.564.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "sharp": "^0.34.5",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "pg": "^8.18.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
