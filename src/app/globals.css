@@ -245,9 +245,17 @@ body {
   background-size: 8px 8px;
 }
 
-/* Safe area for mobile */
-@supports (padding: max(0px)) {
-  .safe-bottom {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+/* 게임기 콘솔 - 스마트폰: 화면 꽉 채움(배경 안 나옴), 데스크톱: 여유 크기 */
+.egg-console {
+  aspect-ratio: 3/4;
+}
+@media (max-width: 639px) {
+  .egg-console {
+    width: max(100vw, 100dvh * 3 / 4);
+  }
+}
+@media (min-width: 640px) {
+  .egg-console {
+    width: min(440px, min(98vw, calc(98dvh * 3 / 4)));
   }
 }

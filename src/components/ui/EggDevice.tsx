@@ -19,15 +19,13 @@ export default function EggDevice({
 }: EggDeviceProps) {
   return (
     <div
-      className="min-h-dvh w-full flex items-center justify-center p-1 box-border"
+      className="h-dvh min-h-dvh w-full flex items-center justify-center overflow-hidden p-0 sm:p-1 box-border"
       style={{ background: 'linear-gradient(135deg, #ffd8e8 0%, #e8d8ff 50%, #d8f0ff 100%)' }}
     >
-      {/* 게임기 콘솔 - 3:4 비율 유지, 뷰포트에 맞게 반응형 스케일 */}
+      {/* 게임기 콘솔 - 스마트폰: 화면 꽉 채움 / 데스크톱: 여유 있게 */}
       <div
-        className="relative flex flex-col items-center shrink-0"
+        className="relative flex flex-col items-center justify-center shrink-0 egg-console"
         style={{
-          width: 'min(440px, min(98vw, calc(98dvh * 3 / 4)))',
-          aspectRatio: '3/4',
           backgroundImage: 'url(/sprites/ui/console_gameboy.png)',
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
@@ -52,7 +50,7 @@ export default function EggDevice({
         </div>
 
         {/* 하단 버튼 - STUDYGOTCHI 하단에 나란히 배치 */}
-        <div className="absolute left-0 right-0 flex justify-center items-center gap-2" style={{ bottom: '42px', marginLeft: '-20px' }}>
+        <div className="absolute left-0 right-0 flex justify-center items-center gap-2" style={{ bottom: '62px', marginLeft: '-20px' }}>
           <button
             data-testid="egg-btn-1"
             onClick={onButton1}
