@@ -86,9 +86,9 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
     <div className="w-full h-full flex flex-col animate-slide-in" style={{ background: '#fff8f0' }}>
       {/* Header */}
       <div className="w-full flex items-center gap-1 px-2 py-1">
-        <button onClick={onBack} className="text-[14px] pixel-btn px-2 py-0.5" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
+        <button onClick={onBack} className="text-[21px] sm:text-[14px] pixel-btn px-2 py-0.5" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
         <div className="flex-1 text-center py-0.5 rounded ui-panel" style={{ ...font }}>
-          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>식사</span>
+          <span className="text-[21px] sm:text-[14px]" style={{ color: 'var(--ui-outline)' }}>식사</span>
         </div>
       </div>
 
@@ -96,13 +96,13 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
         {dead ? (
           <div className="flex flex-col items-center justify-center gap-2 py-4">
             <PixelPet isDead={true} size={56} characterSprite={getCharacterSprite(pet)} />
-            <p className="text-[12px] text-center" style={{ ...font, color: '#ff4040' }}>유령 상태!</p>
+            <p className="text-[18px] sm:text-[12px] text-center" style={{ ...font, color: '#ff4040' }}>유령 상태!</p>
             {user.items.revive_potion > 0 ? (
-              <button onClick={handleRevive} className="pixel-btn px-3 py-1.5 text-[12px]">
+              <button onClick={handleRevive} className="pixel-btn px-3 py-1.5 text-[18px] sm:text-[12px]">
                 💊 부활 ({user.items.revive_potion})
               </button>
             ) : (
-              <p className="text-[10px]" style={{ ...font, color: '#a08060' }}>상점에서 포션을 구매하세요</p>
+              <p className="text-[15px] sm:text-[10px]" style={{ ...font, color: '#a08060' }}>상점에서 포션을 구매하세요</p>
             )}
           </div>
         ) : (
@@ -110,8 +110,8 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
             {/* Nutrition Status */}
             <div className="px-1.5 py-1 rounded-lg" style={{ background: '#fff0e0', border: '2px solid #e0c8a0' }}>
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[7px]" style={{ ...font, color: '#805030' }}>영양</span>
-                <span className="text-[8px]" style={{
+                <span className="text-[11px] sm:text-[7px]" style={{ ...font, color: '#805030' }}>영양</span>
+                <span className="text-[12px] sm:text-[8px]" style={{
                   ...font,
                   color: nutritionStatus.status === 'good' ? '#40a040' : nutritionStatus.status === 'warning' ? '#d0a000' : '#e04040',
                 }}>
@@ -120,7 +120,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
               </div>
               {(Object.keys(nutrition) as NutrientKey[]).map(k => (
                 <div key={k} className="flex items-center gap-0.5 mb-0.5">
-                  <span className="text-[6px] w-10 shrink-0" style={{ ...font, color: '#805030' }}>
+                  <span className="text-[9px] sm:text-[6px] w-14 sm:w-10 shrink-0" style={{ ...font, color: '#805030' }}>
                     {NUTRIENT_ICONS[k]}{NUTRIENT_LABELS[k]}
                   </span>
                   <div className="flex-1 h-1.5 rounded" style={{ background: '#e8dcd0', border: '1px solid #d0c0a0' }}>
@@ -130,7 +130,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
                       transition: 'width 0.3s',
                     }} />
                   </div>
-                  <span className="text-[6px] w-5 text-right" style={{ ...font, color: '#a08060' }}>{nutrition[k]}</span>
+                  <span className="text-[9px] sm:text-[6px] w-5 text-right" style={{ ...font, color: '#a08060' }}>{nutrition[k]}</span>
                 </div>
               ))}
             </div>
@@ -138,7 +138,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
             {/* Food Inventory */}
             <div className="p-1.5 rounded-lg" style={{ background: '#fff0e0', border: '2px solid #e0c8a0' }}>
               {availableFoods.length === 0 ? (
-                <p className="text-[8px] text-center py-2" style={{ ...font, color: '#a08060' }}>
+                <p className="text-[12px] sm:text-[8px] text-center py-2" style={{ ...font, color: '#a08060' }}>
                   음식이 없어요! 쇼핑에서 구입하세요
                 </p>
               ) : (
@@ -153,8 +153,8 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
                         border: selectedFood?.id === food.id ? '1.5px solid #d06000' : '1px solid #e0d0c0',
                       }}
                     >
-                      <span className="text-[10px] leading-none">{food.emoji}</span>
-                      <span className="text-[4px] leading-tight" style={{ ...font, color: '#d06000' }}>x{inventory[food.id]}</span>
+                      <span className="text-[15px] sm:text-[10px] leading-none">{food.emoji}</span>
+                      <span className="text-[6px] sm:text-[4px] leading-tight" style={{ ...font, color: '#d06000' }}>x{inventory[food.id]}</span>
                     </button>
                   ))}
                 </div>
@@ -166,17 +166,17 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
               <div className="px-1.5 py-1 rounded-lg flex items-center gap-2 justify-between" style={{ background: '#ffe8c0', border: '2px solid #d0a060' }}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 mb-0">
-                    <span className="text-base">{selectedFood.emoji}</span>
+                    <span className="text-2xl sm:text-base">{selectedFood.emoji}</span>
                     <div className="leading-tight">
-                      <p className="text-[8px]" style={{ ...font, color: '#805030' }}>{selectedFood.name}</p>
-                      <p className="text-[6px]" style={{ ...font, color: '#a08060' }}>{selectedFood.description}</p>
+                      <p className="text-[12px] sm:text-[8px]" style={{ ...font, color: '#805030' }}>{selectedFood.name}</p>
+                      <p className="text-[9px] sm:text-[6px]" style={{ ...font, color: '#a08060' }}>{selectedFood.description}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-0.5 mt-0.5">
                     {(Object.keys(selectedFood.nutrients) as NutrientKey[])
                       .filter(k => selectedFood.nutrients[k] > 0)
                       .map(k => (
-                        <span key={k} className="text-[3px] px-0.5 py-0 rounded" style={{
+                        <span key={k} className="text-[5px] sm:text-[3px] px-0.5 py-0 rounded" style={{
                           ...font, background: NUTRIENT_COLORS[k] + '30', color: NUTRIENT_COLORS[k],
                         }}>
                           {NUTRIENT_LABELS[k]}+{selectedFood.nutrients[k]}
@@ -187,7 +187,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
                 <button
                   onClick={() => handleFeed(selectedFood)}
                   disabled={feeding}
-                  className="pixel-btn shrink-0 py-[0.2rem] px-2 text-[10px]"
+                  className="pixel-btn shrink-0 py-[0.2rem] px-2 text-[15px] sm:text-[10px]"
                   style={{ ...font, background: '#ffe8c0', color: '#d06000', borderColor: '#d0a060' }}
                 >
                   {feeding ? '...' : '먹이기'}

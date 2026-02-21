@@ -544,20 +544,20 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               return null;
             })()}
 
-            {/* 상태 오버레이 - 펫 이름 클릭 시 */}
+            {/* 상태 오버레이 - 펫 이름 클릭 시 / 모바일: 글씨 50% 확대 */}
             {showStatusOverlay && (
               <div
                 className="absolute inset-0 z-40 flex flex-col overflow-y-auto animate-slide-in gap-0.5"
                 style={{ background: 'rgba(255,248,240,0.98)', padding: '2px 10px 6px' }}
               >
                 <div className="flex items-center">
-                  <button onClick={() => setShowStatusOverlay(false)} className="text-[10px] pixel-btn px-1.5 py-0.5" style={{ fontFamily: "'Press Start 2P'", color: '#000' }}>X</button>
+                  <button onClick={() => setShowStatusOverlay(false)} className="text-[15px] sm:text-[10px] pixel-btn px-1.5 py-0.5" style={{ fontFamily: "'Press Start 2P'", color: '#000' }}>X</button>
                 </div>
                 <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg ui-panel">
                   <PixelPet isDead={dead} size={40} characterSprite={getCharacterSprite(pet)} />
                   <div>
-                    <p className="text-[14px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>{pet.name}</p>
-                    <p className="text-[10px] mt-0.5" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>{stage.name} Lv.{pet.level}</p>
+                    <p className="text-[21px] sm:text-[14px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>{pet.name}</p>
+                    <p className="text-[15px] sm:text-[10px] mt-0.5" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>{stage.name} Lv.{pet.level}</p>
                   </div>
                 </div>
                 {(() => {
@@ -572,8 +572,8 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                 })().map((bar) => (
                   <div key={bar.label} className="px-2">
                     <div className="flex justify-between mb-0.5">
-                      <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>{bar.label}</span>
-                      <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>{bar.value}/{bar.max}</span>
+                      <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>{bar.label}</span>
+                      <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>{bar.value}/{bar.max}</span>
                     </div>
                     <div className="w-full h-1.5 rounded-sm overflow-hidden" style={{ background: '#2a2035', border: '1px solid var(--ui-outline-dark)' }}>
                       <div className="h-full rounded-sm transition-all duration-500" style={{ width: `${Math.min(100, (bar.value / bar.max) * 100)}%`, minWidth: (bar.value / bar.max) * 100 > 0 ? '4px' : 0, background: bar.color }} />
@@ -587,13 +587,13 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                   return (
                     <div className="px-2">
                       <div className="flex justify-between mb-0.5">
-                        <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>영양</span>
-                        <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: nutStatus.status === 'good' ? '#40a040' : nutStatus.status === 'warning' ? '#d0a000' : '#e04040' }}>{nutScore}점</span>
+                        <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>영양</span>
+                        <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: nutStatus.status === 'good' ? '#40a040' : nutStatus.status === 'warning' ? '#d0a000' : '#e04040' }}>{nutScore}점</span>
                       </div>
                       <div className="flex gap-0.5">
                         {(Object.keys(nut) as NutrientKey[]).map(k => (
                           <div key={k} className="flex-1">
-                            <div className="text-center text-[6px] mb-0.5" style={{ fontFamily: "'Press Start 2P'", color: 'var(--ui-outline)' }}>{NUTRIENT_ICONS[k]}</div>
+                            <div className="text-center text-[18px] sm:text-[12px] mb-0.5 leading-none" style={{ fontFamily: "'Press Start 2P'", color: 'var(--ui-outline)' }}>{NUTRIENT_ICONS[k]}</div>
                             <div className="h-1.5 rounded-sm" style={{ background: '#2a2035', border: '1px solid var(--ui-outline-dark)' }}>
                               <div className="h-full rounded-sm" style={{ width: `${nut[k]}%`, background: nut[k] < 20 ? '#ff4040' : NUTRIENT_COLORS[k] }} />
                             </div>
@@ -604,12 +604,12 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                   );
                 })()}
                 <div className="flex justify-between px-2">
-                  <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>포인트</span>
-                  <span className="text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>⭐ {pet.points || 0}P</span>
+                  <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>포인트</span>
+                  <span className="text-[18px] sm:text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>⭐ {pet.points || 0}P</span>
                 </div>
                 <div className="flex justify-between px-2">
-                  <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>보석</span>
-                  <span className="text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>💎 {user.gems}</span>
+                  <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>보석</span>
+                  <span className="text-[18px] sm:text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>💎 {user.gems}</span>
                 </div>
               </div>
             )}

@@ -62,16 +62,16 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
     <div className="w-full h-full flex flex-col animate-slide-in" style={{ background: '#fff8f0' }}>
       {/* Header */}
       <div className="w-full flex items-center gap-1 p-2">
-        <button onClick={onBack} className="text-[14px] pixel-btn px-2 py-1" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
+        <button onClick={onBack} className="text-[21px] sm:text-[14px] pixel-btn px-2 py-1" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
         <div className="flex-1 text-center py-1 rounded ui-panel" style={{ ...font }}>
-          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>쇼핑</span>
+          <span className="text-[21px] sm:text-[14px]" style={{ color: 'var(--ui-outline)' }}>쇼핑</span>
         </div>
       </div>
 
       {/* Points display */}
       <div className="flex justify-between items-center px-3 py-1 ui-panel">
-        <span className="text-[9px]" style={{ ...font, color: 'var(--ui-outline)' }}>보유 포인트</span>
-        <span className="text-[11px]" style={{ ...font, color: 'var(--text-orange)' }}>⭐ {points}P</span>
+        <span className="text-[14px] sm:text-[9px]" style={{ ...font, color: 'var(--ui-outline)' }}>보유 포인트</span>
+        <span className="text-[17px] sm:text-[11px]" style={{ ...font, color: 'var(--text-orange)' }}>⭐ {points}P</span>
       </div>
 
       {/* Category tabs */}
@@ -80,7 +80,7 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
           <button
             key={cat}
             onClick={() => { setCategory(cat); setSelectedFood(null); }}
-            className="shrink-0 px-2 py-1 rounded-full text-[7px]"
+            className="shrink-0 px-2 py-1 rounded-full text-[11px] sm:text-[7px]"
             style={{
               ...font,
               background: category === cat ? '#d06000' : '#fff0e0',
@@ -110,11 +110,11 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
                   opacity: canAfford ? 1 : 0.5,
                 }}
               >
-                <span className="text-xl">{food.emoji}</span>
-                <span className="text-[7px]" style={{ ...font, color: '#805030' }}>{food.name}</span>
-                <span className="text-[6px]" style={{ ...font, color: '#d06000' }}>⭐{food.price}P</span>
+                <span className="text-3xl sm:text-xl">{food.emoji}</span>
+                <span className="text-[11px] sm:text-[7px]" style={{ ...font, color: '#805030' }}>{food.name}</span>
+                <span className="text-[9px] sm:text-[6px]" style={{ ...font, color: '#d06000' }}>⭐{food.price}P</span>
                 {owned > 0 && (
-                  <span className="text-[6px]" style={{ ...font, color: '#a08060' }}>보유:{owned}</span>
+                  <span className="text-[9px] sm:text-[6px]" style={{ ...font, color: '#a08060' }}>보유:{owned}</span>
                 )}
               </button>
             );
@@ -125,10 +125,10 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
         {selectedFood && (
           <div className="p-2 rounded-lg" style={{ background: '#e8ffe8', border: '2px solid #80c080' }}>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xl">{selectedFood.emoji}</span>
+              <span className="text-3xl sm:text-xl">{selectedFood.emoji}</span>
               <div>
-                <p className="text-[9px]" style={{ ...font, color: '#306030' }}>{selectedFood.name}</p>
-                <p className="text-[7px]" style={{ ...font, color: '#609060' }}>{selectedFood.description}</p>
+                <p className="text-[14px] sm:text-[9px]" style={{ ...font, color: '#306030' }}>{selectedFood.name}</p>
+                <p className="text-[11px] sm:text-[7px]" style={{ ...font, color: '#609060' }}>{selectedFood.description}</p>
               </div>
             </div>
 
@@ -137,13 +137,13 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
               {(Object.keys(selectedFood.nutrients) as NutrientKey[])
                 .filter(k => selectedFood.nutrients[k] > 0)
                 .map(k => (
-                  <span key={k} className="text-[6px] px-1 py-0.5 rounded" style={{
+                  <span key={k} className="text-[9px] sm:text-[6px] px-1 py-0.5 rounded" style={{
                     ...font, background: NUTRIENT_COLORS[k] + '30', color: NUTRIENT_COLORS[k],
                   }}>
                     {NUTRIENT_LABELS[k]}+{selectedFood.nutrients[k]}
                   </span>
                 ))}
-              <span className="text-[6px] px-1 py-0.5 rounded" style={{
+              <span className="text-[9px] sm:text-[6px] px-1 py-0.5 rounded" style={{
                 ...font, background: '#ff808030', color: '#d06000',
               }}>
                 포만감+{selectedFood.hungerRestore}
@@ -154,13 +154,13 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
             <div className="flex items-center justify-center gap-2 mb-2">
               <button
                 onClick={() => setBuyQty(Math.max(1, buyQty - 1))}
-                className="w-6 h-6 rounded text-[12px] flex items-center justify-center"
+                className="w-9 h-9 sm:w-6 sm:h-6 rounded text-[18px] sm:text-[12px] flex items-center justify-center"
                 style={{ ...font, background: '#fff', border: '1px solid #c0c0c0', color: '#805030' }}
               >-</button>
-              <span className="text-[11px]" style={{ ...font, color: '#805030' }}>{buyQty}개</span>
+              <span className="text-[17px] sm:text-[11px]" style={{ ...font, color: '#805030' }}>{buyQty}개</span>
               <button
                 onClick={() => setBuyQty(Math.min(10, buyQty + 1))}
-                className="w-6 h-6 rounded text-[12px] flex items-center justify-center"
+                className="w-9 h-9 sm:w-6 sm:h-6 rounded text-[18px] sm:text-[12px] flex items-center justify-center"
                 style={{ ...font, background: '#fff', border: '1px solid #c0c0c0', color: '#805030' }}
               >+</button>
             </div>
@@ -169,7 +169,7 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
             <button
               onClick={() => handleBuy(selectedFood, buyQty)}
               disabled={buying || points < selectedFood.price * buyQty}
-              className="pixel-btn w-full py-1.5 text-[11px] disabled:opacity-40"
+              className="pixel-btn w-full py-1.5 text-[17px] sm:text-[11px] disabled:opacity-40"
               style={{ ...font, background: '#c0f0c0', color: '#306030', borderColor: '#80c080' }}
             >
               {buying ? '...' : `⭐${selectedFood.price * buyQty}P 구매`}

@@ -49,12 +49,12 @@ export default function EggDevice({
           {children}
         </div>
 
-        {/* 하단 버튼 - STUDYGOTCHI 하단에 나란히 배치 */}
-        <div className="absolute left-0 right-0 flex justify-center items-center gap-2" style={{ bottom: '62px', marginLeft: '-20px' }}>
+        {/* 하단 버튼 - 모바일: 2배 크기+10px 위 / 데스크톱: 기본 */}
+        <div className="absolute left-0 right-0 flex justify-center items-center gap-4 sm:gap-2 bottom-[72px] sm:bottom-[62px]" style={{ marginLeft: '-20px' }}>
           <button
             data-testid="egg-btn-1"
             onClick={onButton1}
-            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-7 h-7"
+            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-14 h-14 sm:w-7 sm:h-7"
             style={{
               backgroundImage: 'url(/sprites/ui/Buttons/Button%203/1.PNG)',
               backgroundSize: 'contain',
@@ -71,7 +71,7 @@ export default function EggDevice({
           <button
             data-testid="egg-btn-2"
             onClick={onButton2}
-            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-8 h-8"
+            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-16 h-16 sm:w-8 sm:h-8"
             style={{
               backgroundImage: 'url(/sprites/ui/Buttons/Button%202/1.PNG)',
               backgroundSize: 'contain',
@@ -88,7 +88,7 @@ export default function EggDevice({
           <button
             data-testid="egg-btn-3"
             onClick={onButton3}
-            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-7 h-7"
+            className="transition-transform active:scale-95 bg-transparent border-none cursor-pointer w-14 h-14 sm:w-7 sm:h-7"
             style={{
               backgroundImage: 'url(/sprites/ui/Buttons/Button%203/1.PNG)',
               backgroundSize: 'contain',
