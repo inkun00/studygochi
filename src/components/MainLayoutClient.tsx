@@ -601,15 +601,15 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
       case 'menu':
         const BTN_PLAIN = '/sprites/ui/btn_plain_green.png';
-        const MENU_ROW_HEIGHT = 64; // 버튼 높이 고정 (gap 늘어나도 유지)
+        const MENU_ROW_HEIGHT = 70; // 버튼 높이 (10% 확대)
         return (
-          <div className="w-full h-full overflow-hidden pt-[13px] px-3 grid grid-cols-3 gap-x-2 gap-y-1.5" style={{ background: '#fff8f0', paddingBottom: 0, marginBottom: '-36px', gridTemplateRows: `repeat(4, ${MENU_ROW_HEIGHT}px)` }}>
+          <div className="w-full h-full overflow-hidden pt-[14px] px-3 grid grid-cols-3 gap-x-2 gap-y-2" style={{ background: '#fff8f0', paddingBottom: 0, marginBottom: '-36px', gridTemplateRows: `repeat(4, ${MENU_ROW_HEIGHT}px)` }}>
             {MENU_ITEMS.map((item, i) => (
-              <div key={item.id} className="flex items-center justify-center" style={{ transform: 'scale(0.9)' }}>
+              <div key={item.id} className="flex items-center justify-center" style={{ transform: 'scale(1)' }}>
                 <button
                   data-testid={`menu-${item.id}`}
                   onClick={() => setScreen(item.id)}
-                  className="flex flex-col items-center justify-center w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
+                  className="flex flex-row items-center justify-center gap-1.5 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
                   style={{
                     backgroundImage: `url(${BTN_PLAIN})`,
                     backgroundSize: '100% 100%',
@@ -620,8 +620,8 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                     aspectRatio: '1',
                   }}
                 >
-                  <span className="text-lg leading-none drop-shadow-sm">{item.icon}</span>
-                  <span className="text-[7px] mt-1 font-bold leading-tight text-center px-1" style={{ fontFamily: "'Press Start 2P'", color: '#2a2035', textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+                  <span className="text-xl leading-none drop-shadow-sm shrink-0">{item.icon}</span>
+                  <span className="text-[14px] font-bold leading-tight text-center px-0.5 flex-1" style={{ fontFamily: "'Press Start 2P'", color: '#2a2035', textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
                     {item.label}
                   </span>
                 </button>

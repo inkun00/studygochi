@@ -19,14 +19,14 @@ export default function EggDevice({
 }: EggDeviceProps) {
   return (
     <div
-      className="min-h-dvh w-full flex items-center justify-center p-2 box-border"
+      className="min-h-dvh w-full flex items-center justify-center p-1 box-border"
       style={{ background: 'linear-gradient(135deg, #ffd8e8 0%, #e8d8ff 50%, #d8f0ff 100%)' }}
     >
       {/* 게임기 콘솔 - 3:4 비율 유지, 뷰포트에 맞게 반응형 스케일 */}
       <div
         className="relative flex flex-col items-center shrink-0"
         style={{
-          width: 'min(400px, min(95vw, calc(95dvh * 3 / 4)))',
+          width: 'min(440px, min(98vw, calc(98dvh * 3 / 4)))',
           aspectRatio: '3/4',
           backgroundImage: 'url(/sprites/ui/console_gameboy.png)',
           backgroundSize: '100% 100%',
