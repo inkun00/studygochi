@@ -251,7 +251,7 @@ body {
 }
 @media (max-width: 639px) {
   .egg-console {
-    width: max(100vw, 100dvh * 3 / 4);
+    width: max(95vw, 100dvh * 3 / 4 * 0.95);
   }
 }
 @media (min-width: 640px) {
