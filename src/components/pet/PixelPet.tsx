@@ -32,7 +32,7 @@ export default function PixelPet({ isDead, isThinking, isHappy, size = 80, chara
   const sheet = SPRITE_SHEET_MAP[characterSprite];
   const rows = SPRITE_ROW_MAP[characterSprite];
   const bgPosX = -(FRAME_IDLE % COLS) * size;
-  const bgPosY = -rows.rowIdle * size;
+  const bgPosY = -rows.rowIdle * size - (rows.topOffset ?? 0);
 
   const animClass = isThinking ? '' : isHappy ? 'animate-bounce' : 'animate-float-pet';
 

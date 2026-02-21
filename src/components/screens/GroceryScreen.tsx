@@ -64,7 +64,7 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
       <div className="w-full flex items-center gap-1 p-2">
         <button onClick={onBack} className="text-[14px] pixel-btn px-2 py-1" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
         <div className="flex-1 text-center py-1 rounded ui-panel" style={{ ...font }}>
-          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>장보기</span>
+          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>쇼핑</span>
         </div>
       </div>
 

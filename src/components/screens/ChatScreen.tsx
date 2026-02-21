@@ -222,7 +222,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력하세요"
             maxLength={200}
-            className="flex-1 max-w-[80%] px-1.5 py-0.5 rounded text-[8px] outline-none min-h-0"
+            className="flex-1 max-w-[75%] px-1.5 py-1 rounded text-[12px] outline-none min-h-[40px]"
             style={{
               fontFamily: "'Press Start 2P'",
               border: '1px solid #ddd',
@@ -233,7 +233,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
           <button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="px-2 py-0.5 rounded text-[8px] font-bold disabled:opacity-40 transition-opacity shrink-0 min-h-0"
+            className="px-3 py-1 rounded text-[12px] font-bold disabled:opacity-40 transition-opacity shrink-0 min-h-[40px] min-w-[63px]"
             style={{
               fontFamily: "'Press Start 2P'",
               background: '#ffe812',

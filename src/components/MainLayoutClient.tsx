@@ -25,8 +25,8 @@ type Screen = 'home' | 'menu' | 'study' | 'exam' | 'classroom' | 'shop' | 'feed'
 
 const MENU_ITEMS: { id: Screen; label: string; icon: string; color: string }[] = [
   { id: 'study', label: '공부', icon: '📖', color: '#ff8080' },
-  { id: 'feed', label: '밥주기', icon: '🍖', color: '#ffb060' },
-  { id: 'grocery', label: '장보기', icon: '🛒', color: '#80e8a0' },
+  { id: 'feed', label: '식사', icon: '🍖', color: '#ffb060' },
+  { id: 'grocery', label: '쇼핑', icon: '🛒', color: '#80e8a0' },
   { id: 'play', label: '놀기', icon: '🎮', color: '#c0a0ff' },
   { id: 'exam', label: '시험', icon: '📝', color: '#ffe080' },
   { id: 'classroom', label: '교실', icon: '🏫', color: '#a0d8ff' },
@@ -488,19 +488,37 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               )}
             </div>
             {/* Status bar overlay - 펫 이름 클릭 시 상태 표시 */}
-            <div className="absolute top-0 left-0 right-0 z-20 p-1.5 flex justify-between items-start ui-panel">
-              <button
-                type="button"
-                onClick={() => setShowStatusOverlay(true)}
-                className="text-[12px] cursor-pointer bg-transparent border-none text-left"
-                style={{ fontFamily: "'Press Start 2P'", color: 'var(--ui-outline)' }}
-              >
-                {pet.name}
-              </button>
-              <div className="text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: 'var(--text-orange)' }}>
-                Lv.{pet.level}
-              </div>
-            </div>
+            {(() => {
+              const nameSeed = pet.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+              const r = 245 + (nameSeed % 15);
+              const g = 225 + (nameSeed % 7);
+              const b = 190 + ((nameSeed + pet.level) % 20);
+              const bgColor = `rgba(${r}, ${g}, ${b}, 0.75)`;
+              const borderColor = `rgba(${Math.max(0, r - 40)}, ${Math.max(0, g - 35)}, ${Math.max(0, b - 30)}, 0.5)`;
+              return (
+                <div className="absolute top-0 left-0 right-0 z-20 p-1.5 flex justify-between items-center ui-panel">
+                  <div
+                    className="flex justify-between items-center w-full px-2 py-1 rounded-lg"
+                    style={{
+                      background: bgColor,
+                      boxShadow: `0 0 0 1px ${borderColor}`,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setShowStatusOverlay(true)}
+                      className="text-[12px] cursor-pointer bg-transparent border-none text-left"
+                      style={{ fontFamily: "'Press Start 2P'", color: 'var(--ui-outline)' }}
+                    >
+                      {pet.name}
+                    </button>
+                    <div className="text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: 'var(--text-orange)' }}>
+                      Lv.{pet.level}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {/* Pet message - 채팅창 / 영양 위기 */}
             {(() => {
               const nut = calculateCurrentNutrition(pet, sessionStartAt);
@@ -548,7 +566,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                   return [
                     { label: '경험치', value: expProgress, max: EXP_TO_LEVEL_UP, color: '#a060e0' },
                     { label: '배고픔', value: hunger, max: MAX_H, color: hunger > 30 ? '#40c040' : '#ff4040' },
-                    { label: '심심 지수', value: boredom, max: MAX_B, color: boredom < 100 ? '#60c0a0' : boredom < 150 ? '#e0a040' : '#ff4040' },
+                    { label: '심심', value: boredom, max: MAX_B, color: boredom < 100 ? '#60c0a0' : boredom < 150 ? '#e0a040' : '#ff4040' },
                     { label: '지능', value: intel, max: Math.max(100, intel + 50), color: '#4080ff' },
                   ];
                 })().map((bar) => (
@@ -569,7 +587,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                   return (
                     <div className="px-2">
                       <div className="flex justify-between mb-0.5">
-                        <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>영양지수</span>
+                        <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>영양</span>
                         <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: nutStatus.status === 'good' ? '#40a040' : nutStatus.status === 'warning' ? '#d0a000' : '#e04040' }}>{nutScore}점</span>
                       </div>
                       <div className="flex gap-0.5">
@@ -609,7 +627,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                 <button
                   data-testid={`menu-${item.id}`}
                   onClick={() => setScreen(item.id)}
-                  className="flex flex-row items-center justify-center gap-1.5 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
+                  className="flex flex-row items-center justify-center gap-0 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
                   style={{
                     backgroundImage: `url(${BTN_PLAIN})`,
                     backgroundSize: '100% 100%',
@@ -620,9 +638,11 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                     aspectRatio: '1',
                   }}
                 >
-                  <span className="text-xl leading-none drop-shadow-sm shrink-0">{item.icon}</span>
-                  <span className="text-[14px] font-bold leading-tight text-center px-0.5 flex-1" style={{ fontFamily: "'Press Start 2P'", color: '#2a2035', textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
-                    {item.label}
+                  <span className="flex flex-row items-center justify-center gap-0 shrink-0" style={{ transform: 'translateY(-5px)' }}>
+                    <span className="text-xl leading-none drop-shadow-sm">{item.icon}</span>
+                    <span className="text-[14px] font-bold leading-tight" style={{ fontFamily: "'Press Start 2P'", color: '#2a2035', textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+                      {item.label}
+                    </span>
                   </span>
                 </button>
               </div>
@@ -746,7 +766,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
       default: {
         const screenLabels: Record<string, string> = {
-          study: '공부', exam: '시험', classroom: '교실', shop: '상점', logs: '노트', grocery: '장보기', play: '놀기', chat: '대화',
+          study: '공부', exam: '시험', classroom: '교실', shop: '상점', logs: '노트', grocery: '쇼핑', play: '놀기', chat: '대화', feed: '식사',
         };
         return (
           <div className="w-full h-full flex flex-col animate-slide-in" style={{ background: '#fff8f0' }}>

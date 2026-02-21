@@ -29,6 +29,8 @@ export interface SpriteRowMap {
   rowRight: number;
   rowLeft: number;
   totalRows: number;
+  /** 스프라이트 상단이 잘릴 때 위로 당기는 오프셋 (px) */
+  topOffset?: number;
 }
 
 export type FrameCell = { r: number; c: number };
@@ -89,7 +91,7 @@ export const SPRITE_ROW_MAP: Record<CharacterSprite, SpriteRowMap> = {
   monkey: RABBIT_ROW_MAP,
   elephant: RABBIT_ROW_MAP,
   giraffe: RABBIT_ROW_MAP,
-  panda: RABBIT_ROW_MAP,
+  panda: { ...RABBIT_ROW_MAP, topOffset: 6 },
 };
 
 export const BG_MAP: Record<RoomType, string> = {

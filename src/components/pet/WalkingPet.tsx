@@ -73,6 +73,7 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
     }
   };
   const { x: bgPosX, y: bgPosY } = getBgPos();
+  const topOffset = rows.topOffset ?? 0;
 
   useEffect(() => {
     const TICK = 80;
@@ -182,7 +183,7 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
           height: '100%',
           overflow: 'hidden',
           backgroundImage: `url(${sheet})`,
-          backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+          backgroundPosition: `${bgPosX}px ${bgPosY - topOffset}px`,
           backgroundSize: `${COLS * size}px ${rows.totalRows * size}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',

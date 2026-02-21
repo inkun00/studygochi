@@ -88,7 +88,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
       <div className="w-full flex items-center gap-1 px-2 py-1">
         <button onClick={onBack} className="text-[14px] pixel-btn px-2 py-0.5" style={{ ...font, color: 'var(--text-dark)' }}>←</button>
         <div className="flex-1 text-center py-0.5 rounded ui-panel" style={{ ...font }}>
-          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>밥주기</span>
+          <span className="text-[14px]" style={{ color: 'var(--ui-outline)' }}>식사</span>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
             {/* Nutrition Status */}
             <div className="px-1.5 py-1 rounded-lg" style={{ background: '#fff0e0', border: '2px solid #e0c8a0' }}>
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[7px]" style={{ ...font, color: '#805030' }}>영양지수</span>
+                <span className="text-[7px]" style={{ ...font, color: '#805030' }}>영양</span>
                 <span className="text-[8px]" style={{
                   ...font,
                   color: nutritionStatus.status === 'good' ? '#40a040' : nutritionStatus.status === 'warning' ? '#d0a000' : '#e04040',
@@ -139,7 +139,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
             <div className="p-1.5 rounded-lg" style={{ background: '#fff0e0', border: '2px solid #e0c8a0' }}>
               {availableFoods.length === 0 ? (
                 <p className="text-[8px] text-center py-2" style={{ ...font, color: '#a08060' }}>
-                  음식이 없어요! 장보기에서 구입하세요
+                  음식이 없어요! 쇼핑에서 구입하세요
                 </p>
               ) : (
                 <div className="grid grid-cols-7 gap-0.5">
