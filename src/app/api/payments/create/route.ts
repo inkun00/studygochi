@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { GEM_PACKAGES } from '@/lib/constants';
+import { POINT_PACKAGES } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
     const { packageId } = await request.json();
-    const pkg = GEM_PACKAGES.find((p) => p.id === packageId);
+    const pkg = POINT_PACKAGES.find((p) => p.id === packageId);
     if (!pkg) {
       return NextResponse.json({ error: '잘못된 상품입니다.' }, { status: 400 });
     }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       orderId,
       amount: pkg.price,
       orderName: pkg.label,
-      gems: pkg.gems,
+      points: pkg.points,
     });
   } catch (e) {
     console.error('Payment create error:', e);

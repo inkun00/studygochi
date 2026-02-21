@@ -35,3 +35,6 @@ UPDATE pets SET character_sprite = 'rabbit' WHERE character_sprite IS NULL OR ch
 ALTER TABLE pets DROP CONSTRAINT IF EXISTS pets_character_sprite_check;
 ALTER TABLE pets ADD CONSTRAINT pets_character_sprite_check CHECK (character_sprite IN ('rabbit','tiger','dog','monkey','elephant','giraffe','panda'));
 ALTER TABLE pets ALTER COLUMN character_sprite SET DEFAULT 'rabbit';
+
+-- 010: 공부/대화 1시간 쿨다운용 last_activity_at
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS last_activity_at timestamptz;

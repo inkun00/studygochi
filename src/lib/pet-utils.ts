@@ -1,5 +1,5 @@
 import { Pet } from './types';
-import { HUNGER_DECAY_RATE, INTELLIGENCE_DECAY_RATE, BOREDOM_INCREASE_RATE, MAX_HUNGER, MAX_BOREDOM, EXP_TO_LEVEL_UP, PET_STAGES } from './constants';
+import { HUNGER_DECAY_RATE, INTELLIGENCE_DECAY_RATE, BOREDOM_INCREASE_RATE, MAX_HUNGER, MAX_BOREDOM, EXP_TO_LEVEL_UP, PET_STAGES, STUDY_CHAT_COOLDOWN_MS } from './constants';
 import { getNutritionStatus, NUTRIENT_DECAY_PER_HOUR, type NutrientKey } from './food-constants';
 
 /**
@@ -74,6 +74,21 @@ export function isPetDead(pet: Pet, sessionStartAt?: number | null): boolean {
   return false;
 }
 
+/** 공부/대화 쿨다운 경과 여부 (1시간 지났으면 true, last_activity_at 없으면 가능) */
+export function canStudyOrChat(pet: Pet): boolean {
+  if (!pet.last_activity_at) return true;
+  const last = new Date(pet.last_activity_at).getTime();
+  return Date.now() - last >= STUDY_CHAT_COOLDOWN_MS;
+}
+
+/** 쿨다운 남은 시간(ms), 0이면 사용 가능 */
+export function getStudyChatCooldownRemaining(pet: Pet): number {
+  if (!pet.last_activity_at) return 0;
+  const last = new Date(pet.last_activity_at).getTime();
+  const elapsed = Date.now() - last;
+  return Math.max(0, STUDY_CHAT_COOLDOWN_MS - elapsed);
+}
+
 export function getPetStage(level: number): { minLevel: number; name: string; emoji: string } {
   let stage: { minLevel: number; name: string; emoji: string } = PET_STAGES[0];
   for (const s of PET_STAGES) {
@@ -88,6 +103,48 @@ export function calculateLevel(experience: number): number {
 
 export function getExpProgress(experience: number): number {
   return experience % EXP_TO_LEVEL_UP;
+}
+
+/** 노트 표시용: study_log, 사용자:, 펫:, 학습요약: 등 레이블 제거 */
+export function formatLogContentForDisplay(content: string | undefined): string {
+  if (!content) return '';
+  let text = content.trim();
+  // 레이블 패턴: 줄 시작 또는 앞뒤 공백 포함, 콜론 유무 관계없이 제거
+  const labelsToRemove = /(^|\n)\s*(study_log|요약|학습\s*요약|학습요약|학습\s*요약\s*:?|사용자|펫)\s*:?\s*/gi;
+  text = text.replace(labelsToRemove, '$1').trim();
+  text = text.replace(/^\s*[-–—]\s*/gm, '').trim();
+  return text;
+}
+
+/** 단어 토큰 추출 (공백·구두점 기준, 한국어/영어 유지) */
+function tokenizeForComparison(text: string): Set<string> {
+  const normalized = text
+    .toLowerCase()
+    .replace(/[^\w가-힣a-zA-Z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 2); // 1글자 단어 제외 (조사 등)
+  return new Set(normalized);
+}
+
+/** 기존 노트와 단어 단위 유사도가 높으면 중복 (일치도 임계값 0.65) */
+export function isDuplicateOfExistingContent(
+  newContent: string,
+  existingLogs: { content: string }[]
+): boolean {
+  if (!newContent.trim()) return true;
+  const newTokens = tokenizeForComparison(newContent);
+  if (newTokens.size === 0) return false;
+
+  for (const log of existingLogs) {
+    const existingTokens = tokenizeForComparison(log.content);
+    let matches = 0;
+    for (const t of newTokens) {
+      if (existingTokens.has(t)) matches++;
+    }
+    const overlapRatio = matches / newTokens.size;
+    if (overlapRatio >= 0.65) return true;
+  }
+  return false;
 }
 
 export function getHungerColor(hunger: number): string {

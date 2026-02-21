@@ -30,6 +30,10 @@ interface AppState {
   // Session (Last_Login 기반 배고픔 - 세션 동안에만 차감)
   sessionStartAt: number | null;
   setSessionStartAt: (t: number | null) => void;
+
+  // 대화 메시지 (5번 전에 나갔다 오면 이어가기)
+  chatMessages: { id: string; role: 'user' | 'pet'; text: string; timestamp: number }[];
+  setChatMessages: (messages: { id: string; role: 'user' | 'pet'; text: string; timestamp: number }[]) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -56,4 +60,7 @@ export const useStore = create<AppState>((set) => ({
 
   sessionStartAt: null,
   setSessionStartAt: (sessionStartAt) => set({ sessionStartAt }),
+
+  chatMessages: [],
+  setChatMessages: (chatMessages) => set({ chatMessages }),
 }));

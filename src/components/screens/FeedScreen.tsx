@@ -9,7 +9,7 @@ import {
   MAX_NUTRIENT, calculateNutritionScore, getNutritionStatus,
   type NutrientKey, type FoodItem,
 } from '@/lib/food-constants';
-import { EXP_PER_FEED, EXP_TO_LEVEL_UP } from '@/lib/constants';
+import { EXP_TO_LEVEL_UP } from '@/lib/constants';
 import { calculateLevel } from '@/lib/pet-utils';
 import type { Pet, UserProfile } from '@/lib/types';
 
@@ -51,7 +51,8 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
     const newInventory = { ...inventory, [food.id]: qty - 1 };
     if (newInventory[food.id] <= 0) delete newInventory[food.id];
 
-    const newExp = pet.experience + EXP_PER_FEED;
+    const expGain = Math.max(1, food.price);
+    const newExp = pet.experience + expGain;
     const newLevel = calculateLevel(newExp);
     const updates = {
       hunger: newHunger,
@@ -64,7 +65,7 @@ export default function FeedScreen({ pet, setPet, user, setUser, supabase, setPe
 
     await supabase.from('pets').update(updates).eq('id', pet.id);
     setPet({ ...pet, ...updates });
-    setPetMessage(`${food.emoji} ${food.name} 맛있다! +${EXP_PER_FEED} EXP 냠냠!`);
+    setPetMessage(`${food.emoji} ${food.name} 맛있다! +${expGain} EXP 냠냠!`);
     setSelectedFood(null);
     setFeeding(false);
   };

@@ -9,8 +9,8 @@ import EggDevice from '@/components/ui/EggDevice';
 import PixelPet from '@/components/pet/PixelPet';
 import WalkingPet from '@/components/pet/WalkingPet';
 import PixelRoom from '@/components/pet/PixelRoom';
-import { calculateCurrentHunger, isPetDead, getExpProgress, getPetStage, getPetStatusEmoji, calculateCurrentNutrition, calculateCurrentIntelligence, calculateCurrentBoredom } from '@/lib/pet-utils';
-import { EXP_TO_LEVEL_UP, MAX_HUNGER as MAX_H, MAX_BOREDOM as MAX_B, DEATH_PENALTY_MS, INTELLIGENCE_PER_STUDY_CHAR } from '@/lib/constants';
+import { calculateCurrentHunger, isPetDead, getExpProgress, getPetStage, getPetStatusEmoji, calculateCurrentNutrition, calculateCurrentIntelligence, calculateCurrentBoredom, formatLogContentForDisplay } from '@/lib/pet-utils';
+import { EXP_TO_LEVEL_UP, MAX_HUNGER as MAX_H, MAX_BOREDOM as MAX_B, MAX_INTELLIGENCE, DEATH_PENALTY_MS, INTELLIGENCE_PER_STUDY_CHAR, BOREDOM_INCREASE_RATE, INTELLIGENCE_DECAY_RATE } from '@/lib/constants';
 import FeedScreen from '@/components/screens/FeedScreen';
 import { CHARACTER_SPRITES, pickRandomCharacter, pickRandomRoom, getCharacterSprite, getRoomType, getPetMBTI } from '@/lib/pet-constants';
 import { pickRandomMBTI, getPetTouchMessage } from '@/lib/pet-messages';
@@ -38,7 +38,7 @@ const MENU_ITEMS: { id: Screen; label: string; icon: string; color: string }[] =
 export default function MainLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const supabase = createClient();
-  const { user, setUser, pet, setPet, studyLogs, setStudyLogs, addStudyLog, petMessage, setPetMessage, sessionStartAt, setSessionStartAt } = useStore();
+  const { user, setUser, pet, setPet, studyLogs, setStudyLogs, addStudyLog, petMessage, setPetMessage, sessionStartAt, setSessionStartAt, setChatMessages } = useStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [needsPet, setNeedsPet] = useState(false);
   const [creatingPet, setCreatingPet] = useState(false);
@@ -52,9 +52,61 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
   const [faceFrontTrigger, setFaceFrontTrigger] = useState(0);
   const [selectedLogIds, setSelectedLogIds] = useState<Set<number>>(new Set());
   const [deletingLogs, setDeletingLogs] = useState(false);
+  const [statusTick, setStatusTick] = useState(0); // 배고픔·심심·지능·영양 주기적 갱신용
   const statusPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const petRef = useRef(pet);
   petRef.current = pet;
+
+  // 5분마다 상태(배고픔·심심·지능·영양) 갱신 → 화면에 시간 경과 반영
+  useEffect(() => {
+    const id = setInterval(() => setStatusTick((t) => t + 1), 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // 이탈 시 현재 상태 DB 저장 (복귀 시 last_fed_at 등으로 재계산됨)
+  useEffect(() => {
+    const saveOnLeave = () => {
+      const p = petRef.current;
+      if (!p?.id) return;
+
+      const hunger = calculateCurrentHunger(p, null);
+      const nutrition = calculateCurrentNutrition(p, null);
+      const boredom = calculateCurrentBoredom(p, null);
+      const intelligence = calculateCurrentIntelligence(p, null);
+
+      const now = Date.now();
+      const last_fed_at = new Date(now).toISOString();
+      const last_played_at = new Date(now - (boredom / BOREDOM_INCREASE_RATE) * 3600 * 1000).toISOString();
+      const lastStudied = p.last_studied_at ? new Date(p.last_studied_at).getTime() : new Date(p.created_at).getTime();
+      const hoursSinceStudied = (p.intelligence - intelligence) / INTELLIGENCE_DECAY_RATE;
+      const last_studied_at = new Date(now - Math.max(0, hoursSinceStudied) * 3600 * 1000).toISOString();
+
+      fetch('/api/pet/save-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          petId: p.id,
+          hunger,
+          nutrition,
+          last_fed_at,
+          last_played_at,
+          last_studied_at,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    const handleLeave = () => {
+      if (document.visibilityState === 'hidden') saveOnLeave();
+    };
+
+    window.addEventListener('pagehide', saveOnLeave);
+    document.addEventListener('visibilitychange', handleLeave);
+    return () => {
+      window.removeEventListener('pagehide', saveOnLeave);
+      document.removeEventListener('visibilitychange', handleLeave);
+    };
+  }, []);
 
   // 펫 머리 위 Popup 스프라이트: 무작위로 상태 이모지 표시, 3초 후 사라짐
   useEffect(() => {
@@ -115,8 +167,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
       }
       if (petData) {
         // 펫이 죽었는데 died_at이 없으면 DB에 기록 (계산적 사망: 배고픔/심심/영양/지능)
-        const sessionStart = Date.now();
-        const computedDead = petData.is_dead || isPetDead(petData, sessionStart);
+        const computedDead = petData.is_dead || isPetDead(petData, null);
         if (computedDead && !petData.died_at) {
           const { data: updated } = await supabase
             .from('pets')
@@ -142,7 +193,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
       const { data: logs } = await supabase.from('study_logs').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false }).limit(20);
       if (logs) setStudyLogs(logs);
-      setSessionStartAt(Date.now());
+      setSessionStartAt(null); // null이면 last_fed_at 등 DB 타임스탬프 기준으로 배고픔·심심 등 계산 (이탈 시 저장 데이터 반영)
       setIsInitialized(true);
     };
     init();
@@ -261,12 +312,13 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
       setPet(data);
       setNeedsPet(false);
       setScreen('home');
-      // 새 펫 = 새 시작: 학습 로그·지식도 초기화
+      // 새 펫 = 새 시작: 학습 로그·지식도·대화 초기화
       await supabase.from('study_logs').delete().eq('user_id', userId);
       setStudyLogs([]);
+      setChatMessages([]);
     }
     setCreatingPet(false);
-  }, [user, authUserId, pet, petName, previewCharacter, previewRoom, supabase, setPet, setStudyLogs]);
+  }, [user, authUserId, pet, petName, previewCharacter, previewRoom, supabase, setPet, setStudyLogs, setChatMessages]);
 
   const handleDeleteLogs = useCallback(async () => {
     if (!pet || selectedLogIds.size === 0) return;
@@ -567,7 +619,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                     { label: '경험치', value: expProgress, max: EXP_TO_LEVEL_UP, color: '#a060e0' },
                     { label: '배고픔', value: hunger, max: MAX_H, color: hunger > 30 ? '#40c040' : '#ff4040' },
                     { label: '심심', value: boredom, max: MAX_B, color: boredom < 100 ? '#60c0a0' : boredom < 150 ? '#e0a040' : '#ff4040' },
-                    { label: '지능', value: intel, max: Math.max(100, intel + 50), color: '#4080ff' },
+                    { label: '지능', value: Math.min(intel, MAX_INTELLIGENCE), max: MAX_INTELLIGENCE, color: '#4080ff' },
                   ];
                 })().map((bar) => (
                   <div key={bar.label} className="px-2">
@@ -603,13 +655,9 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                     </div>
                   );
                 })()}
-                <div className="flex justify-between px-2">
+                <div className="flex justify-between px-2" style={{ marginTop: '10px' }}>
                   <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>포인트</span>
-                  <span className="text-[18px] sm:text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>⭐ {pet.points || 0}P</span>
-                </div>
-                <div className="flex justify-between px-2">
-                  <span className="text-[15px] sm:text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: '#805030' }}>보석</span>
-                  <span className="text-[18px] sm:text-[12px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>💎 {user.gems}</span>
+                  <span className="inline-flex items-baseline" style={{ fontFamily: "'Press Start 2P'", color: '#d06000', gap: 0 }}><span className="text-[18px] sm:text-[12px] leading-none">⭐</span><span className="text-[18px] sm:text-[12px]">{(pet.points || 0)}P</span></span>
                 </div>
               </div>
             )}
@@ -738,7 +786,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                         fontFamily: "'Press Start 2P'",
                       }}
                     >
-                      <p className="text-[10px] leading-relaxed" style={{ color: '#805030' }}>{log.content}</p>
+                      <p className="text-[10px] leading-relaxed" style={{ color: '#805030' }}>{formatLogContentForDisplay(log.content)}</p>
                       <p className="text-[7px] mt-1" style={{ color: '#a08060' }}>
                         {new Date(log.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>

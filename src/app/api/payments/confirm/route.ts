@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { GEM_PACKAGES } from '@/lib/constants';
+import { POINT_PACKAGES } from '@/lib/constants';
 import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
 
 export async function POST(request: NextRequest) {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const totalAmount = Number(data.totalAmount) || amount;
-    const pkg = GEM_PACKAGES.find((p) => p.price === totalAmount);
+    const pkg = POINT_PACKAGES.find((p) => p.price === totalAmount);
     if (!pkg) {
       return NextResponse.json({ error: '등록되지 않은 상품입니다.' }, { status: 400 });
     }
@@ -50,18 +50,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '본인의 결제만 확인할 수 있습니다.' }, { status: 403 });
     }
 
-    const { data: profile } = await supabase.from('profiles').select('gems').eq('id', payment.user_id).single();
-    const newGems = (profile?.gems || 0) + pkg.gems;
+    const { data: petRow } = await supabase
+      .from('pets')
+      .select('id, points')
+      .eq('user_id', payment.user_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    await supabase.from('profiles').update({ gems: newGems }).eq('id', payment.user_id);
+    const currentPoints = petRow?.points || 0;
+    const newPoints = currentPoints + pkg.points;
+
+    if (petRow?.id) {
+      await supabase.from('pets').update({ points: newPoints }).eq('id', petRow.id);
+    }
     await supabase.from('payments').update({ status: 'DONE' }).eq('order_id', orderId);
 
     return NextResponse.json({
       success: true,
       orderId: data.orderId,
       amount: totalAmount,
-      gems: pkg.gems,
-      newGems,
+      points: pkg.points,
+      newPoints,
       userId: payment.user_id,
     });
   } catch (error) {

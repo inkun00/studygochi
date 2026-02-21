@@ -60,18 +60,15 @@ export async function chatWithPet(
     .map((m) => `${m.role === 'user' ? userName : petName}: ${m.text}`)
     .join('\n');
 
-  const systemPrompt = `당신의 이름은 ${petName}이에요. ${userName}님이 키우는 펫이에요. MBTI ${mbti}.
+  const systemPrompt = `당신의 이름은 ${petName}이에요. ${userName}님이 키우는 펫이에요. MBTI ${mbti} 성격이에요.
 
-【필수: 짧게 답하세요】
-- 답변은 1문장, 최대 15단어 이내. 핵심만.
-- "음...", "흠..." 같은 추임새 금지.
-- 지식 질문이면 정답만. 예: "이순신장군이요." / "1592년이에요."
-- 이모지는 필요할 때만 1개.
-
-【지식/사실 질문】
-- 공부한 내용에 있으면 그것만 짧게 답해요.
-- 없으면 "모르겠어요. ${userName}님이 가르쳐주세요!" 한 문장만.
-- 절대 지어내지 마세요.
+【답변 스타일】
+- 2문장 또는 최대 3문장 이내로 답하세요.
+- 일상 대화: 감정을 담아 따뜻하고 친근하게. 질문에 맞춰 자연스럽게 이어지게요.
+- 지식 질문: 공부한 내용으로 설명을 곁들여 대답해요. 예: "그건 이순신 장군이에요! 임진왜란 때 활약하셨죠."
+- 공부한 내용에 없으면 "그건 잘 모르겠어요... ${userName}님이 가르쳐주시면 기억할게요!" 식으로 말해요.
+- 절대 지어내지 마세요. 공부한 내용에만 근거해서 답하세요.
+- 이모지는 분위기에 맞게 적당히 (1~2개).
 
 【공부한 내용】
 ${context}
@@ -94,24 +91,33 @@ ${petName}:`;
   return result.response.text();
 }
 
-/** 대화에서 학습 관련 내용만 추출 */
+/** 대화에서 학습 관련 내용만 추출 (노트 저장용) */
 export async function extractLearningFromChat(
   userMessage: string,
   petAnswer: string
 ): Promise<string | null> {
-  const prompt = `다음 대화에서 학습·교육·지식 관련 내용만 추출하세요.
-교과지식, 사실, 개념, 정의 등이 있으면 1-2문장으로 요약만 출력하세요. 레이블(study_log:, 요약: 등)은 붙이지 마세요.
-인사, 일상 대화, 감정 표현만 있으면 빈 줄만 출력하세요.
+  const prompt = `아래 대화에서 "학습·교육·지식" 관련 내용이 있을 때만 추출하세요.
 
-사용자: ${userMessage}
-펫: ${petAnswer}
+【규칙】
+- 반드시 주어진 대화에 실제로 있는 내용만 추출. 없는 내용 절대 지어내지 마세요.
+- 교과지식, 사실, 개념, 정의가 있으면 1-2문장으로 요약.
+- 인사, 일상 대화, 감정만 있으면 아무것도 출력하지 마세요 (빈 출력).
+- 출력 형식: 레이블·접두사 없이 요약 내용만 출력. "study_log:", "요약:", "학습요약:", "사용자:", "펫:" 등 절대 붙이지 마세요.
 
-학습 요약 (없으면 빈 줄, 내용만 출력):`;
+【대화】
+질문: ${userMessage}
+답변: ${petAnswer}
+
+【출력 (요약 내용만, 레이블 없이)】
+`;
 
   const result = await geminiModel.generateContent(prompt);
   let text = result.response.text().trim();
-  // 레이블 제거 (study_log:, 요약: 등)
-  text = text.replace(/^(study_log|요약|학습 요약)[:\s]*/i, '').trim();
+  // 노트에 저장될 내용에서 레이블/접두사 전부 제거 (학습요약:, 학습 요약:, study_log: 등)
+  const labelsToRemove = /(^|\n)\s*(study_log|요약|학습\s*요약|학습요약|학습\s*요약\s*:?|사용자|펫)\s*:?\s*/gi;
+  text = text.replace(labelsToRemove, '$1').trim();
+  text = text.replace(/^\s*(학습요약|학습\s*요약)\s*:?\s*/i, '').trim(); // 문장 맨 앞 레이블
+  text = text.replace(/^\s*[-–—]\s*/gm, '').trim();
   return text.length > 0 ? text : null;
 }
 

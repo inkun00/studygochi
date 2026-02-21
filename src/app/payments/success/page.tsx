@@ -9,7 +9,7 @@ import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
-  const { user, setUser } = useStore();
+  const { user, setUser, pet, setPet } = useStore();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
@@ -41,9 +41,11 @@ function PaymentSuccessContent() {
         const supabase = createClient();
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.userId).single();
         if (profile) setUser(profile);
+        const { data: petRow } = await supabase.from('pets').select('*').eq('user_id', data.userId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (petRow) setPet(petRow);
 
         setStatus('success');
-        setMessage(`${data.gems || 0} 젬이 지급되었습니다! 💎`);
+        setMessage(`${data.points || 0}P가 지급되었습니다! ⭐`);
       } catch (e) {
         setStatus('error');
         setMessage('결제 처리 중 오류가 발생했습니다.');

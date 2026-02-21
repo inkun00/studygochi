@@ -1,13 +1,22 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useStore } from '@/store/useStore';
 import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
 import PixelPet from '@/components/pet/PixelPet';
 import { getCharacterSprite, getPetMBTI } from '@/lib/pet-constants';
-import { INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR } from '@/lib/constants';
-import { calculateLevel } from '@/lib/pet-utils';
+import { MAX_INTELLIGENCE, INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR, CHAT_EXCHANGES_PER_SESSION, CHAT_INPUT_MAX_LENGTH } from '@/lib/constants';
+import { calculateLevel, canStudyOrChat, getStudyChatCooldownRemaining, isDuplicateOfExistingContent } from '@/lib/pet-utils';
 import type { Pet, StudyLog, UserProfile } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+function formatCooldownRemaining(ms: number): string {
+  if (ms <= 0) return '0분 0초';
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}분 ${s}초`;
+}
 
 interface ChatMessage {
   id: string;
@@ -28,18 +37,59 @@ interface ChatScreenProps {
 }
 
 export default function ChatScreen({ pet, studyLogs, userName = '사용자', user, supabase, addStudyLog, setPet, onBack }: ChatScreenProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { chatMessages, setChatMessages } = useStore();
+  const [messages, setMessages] = useState<ChatMessage[]>(() => chatMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(() => {
+    const count = chatMessages.filter((m) => m.role === 'pet').length;
+    return count >= CHAT_EXCHANGES_PER_SESSION;
+  });
+  const [remainingMs, setRemainingMs] = useState(() => getStudyChatCooldownRemaining(pet));
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const onCooldown = !canStudyOrChat(pet);
+  const exchangeCount = messages.filter((m) => m.role === 'pet').length;
+
+  // 진입 시 DB에서 pet 재조회 → last_activity_at 정확히 반영 (나갔다 들어올 때 쿨다운 우회 방지)
+  useEffect(() => {
+    if (!pet?.id) return;
+    let cancelled = false;
+    supabase.from('pets').select('*').eq('id', pet.id).single().then(({ data }) => {
+      if (!cancelled && data) setPet(data);
+    });
+    return () => { cancelled = true; };
+  }, [pet?.id, supabase, setPet]);
+
+  useEffect(() => {
+    setChatMessages(sessionComplete ? [] : messages);
+  }, [messages, sessionComplete, setChatMessages]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  // 쿨다운 타이머: 1초마다 남은 시간 갱신
+  useEffect(() => {
+    if (!onCooldown) {
+      setRemainingMs(0);
+      return;
+    }
+    const update = () => setRemainingMs(getStudyChatCooldownRemaining(pet));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [onCooldown, pet]);
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || loading) return;
+    if (sessionComplete) return;
+    if (exchangeCount >= CHAT_EXCHANGES_PER_SESSION) return;
+    if (onCooldown) {
+      alert(`1시간 쿨다운! ${formatCooldownRemaining(remainingMs)} 후 대화 가능해요.`);
+      return;
+    }
 
     setInput('');
     const userMsg: ChatMessage = {
@@ -81,7 +131,17 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
         text: petAnswer,
         timestamp: Date.now(),
       };
-      setMessages((prev) => [...prev, petMsg]);
+      const nextMessages = [...messages, userMsg, petMsg];
+      const newExchangeCount = nextMessages.filter((m) => m.role === 'pet').length;
+      setMessages(nextMessages);
+
+      if (newExchangeCount >= CHAT_EXCHANGES_PER_SESSION) {
+        setSessionComplete(true);
+        setChatMessages([]);
+        const lastActivityAt = new Date().toISOString();
+        await supabase.from('pets').update({ last_activity_at: lastActivityAt }).eq('id', pet.id);
+        setPet({ ...pet, last_activity_at: lastActivityAt });
+      }
 
       // 학습 관련 내용만 요약해서 노트에 저장
       if (user?.id) {
@@ -95,24 +155,26 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
           const summary = sumData?.summary;
           if (summary && typeof summary === 'string' && summary.trim()) {
             const trimmed = summary.trim();
-            const { data: log } = await supabase
-              .from('study_logs')
-              .insert({ user_id: user.id, content: trimmed })
-              .select()
-              .single();
-            if (log) {
-              addStudyLog(log);
-              const len = trimmed.length;
-              const intelligenceGain = Math.max(1, Math.floor(len / INTELLIGENCE_PER_STUDY_CHAR));
-              const pointsGain = Math.max(1, Math.floor(len / POINTS_PER_STUDY_CHAR));
-              const expGain = Math.max(1, Math.floor(len / EXP_PER_STUDY_CHAR));
-              const newIntelligence = (pet.intelligence ?? 0) + intelligenceGain;
-              const newPoints = (pet.points || 0) + pointsGain;
-              const newExp = pet.experience + expGain;
-              const newLevel = calculateLevel(newExp);
-              const lastStudiedAt = new Date().toISOString();
-              await supabase.from('pets').update({ points: newPoints, intelligence: newIntelligence, experience: newExp, level: newLevel, last_studied_at: lastStudiedAt }).eq('id', pet.id);
-              setPet({ ...pet, points: newPoints, intelligence: newIntelligence, experience: newExp, level: newLevel, last_studied_at: lastStudiedAt });
+            if (!isDuplicateOfExistingContent(trimmed, studyLogs)) {
+              const { data: log } = await supabase
+                .from('study_logs')
+                .insert({ user_id: user.id, content: trimmed })
+                .select()
+                .single();
+              if (log) {
+                addStudyLog(log);
+                const len = trimmed.length;
+                const intelligenceGain = Math.max(1, Math.floor(len / INTELLIGENCE_PER_STUDY_CHAR));
+                const pointsGain = Math.max(1, Math.floor(len / POINTS_PER_STUDY_CHAR));
+                const expGain = Math.max(1, Math.floor(len / EXP_PER_STUDY_CHAR));
+                const newIntelligence = Math.min(MAX_INTELLIGENCE, (pet.intelligence ?? 0) + intelligenceGain);
+                const newPoints = (pet.points || 0) + pointsGain;
+                const newExp = pet.experience + expGain;
+                const newLevel = calculateLevel(newExp);
+                const lastStudiedAt = new Date().toISOString();
+                await supabase.from('pets').update({ points: newPoints, intelligence: newIntelligence, experience: newExp, level: newLevel, last_studied_at: lastStudiedAt }).eq('id', pet.id);
+                setPet({ ...pet, points: newPoints, intelligence: newIntelligence, experience: newExp, level: newLevel, last_studied_at: lastStudiedAt });
+              }
             }
           }
         } catch {
@@ -162,13 +224,23 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-2 space-y-3 flex flex-col"
       >
-        {messages.length === 0 && (
+        {messages.length === 0 && onCooldown && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+            <p className="text-[10px] mb-2" style={{ fontFamily: "'Press Start 2P'", color: '#e04040' }}>
+              1시간 쿨다운!
+            </p>
+            <p className="text-[8px] font-bold" style={{ fontFamily: "'Press Start 2P'", color: '#333' }}>
+              {formatCooldownRemaining(remainingMs)} 후 대화 가능해요
+            </p>
+          </div>
+        )}
+        {messages.length === 0 && canStudyOrChat(pet) && (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
             <p className="text-[10px] mb-2" style={{ fontFamily: "'Press Start 2P'", color: '#666' }}>
               {pet.name}에게 말해보세요!
             </p>
             <p className="text-[8px]" style={{ fontFamily: "'Press Start 2P'", color: '#999' }}>
-              지식 질문은 공부한 내용만 답해요
+              지식 질문은 공부한 내용만 답해요. 5번 주고받기 = 1회
             </p>
           </div>
         )}
@@ -214,25 +286,30 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
 
       {/* 입력 영역 */}
       <div className="p-1.5 shrink-0" style={{ background: '#fff', borderTop: '1px solid #e0e0e0' }}>
+        {(sessionComplete || onCooldown) && (
+          <p className="text-[8px] mb-1 text-center" style={{ fontFamily: "'Press Start 2P'", color: onCooldown ? '#e04040' : '#408040' }}>
+            {onCooldown ? `${formatCooldownRemaining(remainingMs)} 후 대화 가능` : '5번 대화 완료! 1시간 후 다시 대화 가능'}
+          </p>
+        )}
         <div className="flex gap-1 items-center">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="메시지를 입력하세요"
-            maxLength={200}
+            placeholder={`메시지 (${CHAT_INPUT_MAX_LENGTH}자 이내)`}
+            maxLength={CHAT_INPUT_MAX_LENGTH}
             className="flex-1 max-w-[75%] px-1.5 py-1 rounded text-[12px] outline-none min-h-[40px]"
             style={{
               fontFamily: "'Press Start 2P'",
               border: '1px solid #ddd',
               background: '#f8f8f8',
             }}
-            disabled={loading}
+            disabled={loading || onCooldown || sessionComplete}
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || loading || sessionComplete || onCooldown}
             className="px-3 py-1 rounded text-[12px] font-bold disabled:opacity-40 transition-opacity shrink-0 min-h-[40px] min-w-[63px]"
             style={{
               fontFamily: "'Press Start 2P'",

@@ -1,6 +1,9 @@
 export type CharacterSet = 'default' | 'dragon' | 'bunny' | 'fox';
 
-export type CharacterSprite = 'rabbit' | 'tiger' | 'dog' | 'monkey' | 'elephant' | 'giraffe' | 'panda';
+export type CharacterSprite =
+  | 'rabbit' | 'tiger' | 'dog' | 'monkey' | 'elephant' | 'giraffe' | 'panda'
+  | 'squirrel' | 'sloth' | 'wolf' | 'mouse' | 'hedgehog' | 'koala' | 'bear' | 'horse' | 'pig'
+  | 'meerkat' | 'dessertFox' | 'racoon' | 'deer' | 'cat' | 'lion';
 export type RoomType = 'bedroom' | 'kitchen' | 'classroom' | 'shop';
 
 export type MBTIType =
@@ -33,6 +36,7 @@ export interface Pet {
   last_fed_at: string;
   last_studied_at?: string;
   last_played_at?: string;
+  last_activity_at?: string;
   died_at?: string;
   created_at: string;
   character_sprite?: CharacterSprite;

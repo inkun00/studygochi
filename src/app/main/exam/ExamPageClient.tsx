@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { useStore } from '@/store/useStore';
 import { Exam } from '@/lib/types';
-import { MAX_STUDY_LOGS_FOR_EXAM, EXP_PER_CORRECT, EXP_PER_WRONG } from '@/lib/constants';
+import { MAX_STUDY_LOGS_FOR_EXAM, MAX_INTELLIGENCE, EXP_PER_CORRECT, EXP_PER_WRONG } from '@/lib/constants';
 import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
 import { calculateLevel, isPetDead } from '@/lib/pet-utils';
 import PixelPet from '@/components/pet/PixelPet';
@@ -101,7 +101,7 @@ export default function ExamPageClient() {
       const expGain = grade.is_correct ? EXP_PER_CORRECT : EXP_PER_WRONG;
       const newExp = pet.experience + expGain;
       const newLevel = calculateLevel(newExp);
-      const newInt = pet.intelligence + (grade.is_correct ? 10 : 2);
+      const newInt = Math.min(MAX_INTELLIGENCE, pet.intelligence + (grade.is_correct ? 10 : 2));
 
       await supabase.from('exam_results').insert({ exam_id: exam.id, user_id: user.id, pet_answer: answer, is_correct: grade.is_correct, score: grade.is_correct ? 50 : 10 });
       const lastStudiedAt = new Date().toISOString();

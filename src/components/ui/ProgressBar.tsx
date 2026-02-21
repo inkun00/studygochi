@@ -6,6 +6,8 @@ interface ProgressBarProps {
   color?: string;
   label?: string;
   showValue?: boolean;
+  /** true이면 value만 표시 (한도 없음, /max 생략) */
+  hideMax?: boolean;
 }
 
 export default function ProgressBar({
@@ -14,8 +16,10 @@ export default function ProgressBar({
   color = '#a060e0',
   label,
   showValue = true,
+  hideMax = false,
 }: ProgressBarProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const effectiveMax = max > 0 ? max : 1;
+  const percentage = Math.min(100, Math.max(0, (value / effectiveMax) * 100));
 
   return (
     <div className="w-full" style={{ fontFamily: "'Press Start 2P', monospace" }}>
@@ -24,7 +28,7 @@ export default function ProgressBar({
           {label && <span className="font-semibold" style={{ color: 'var(--ui-outline)' }}>{label}</span>}
           {showValue && (
             <span style={{ color: 'var(--text-orange)' }}>
-              {value}/{max}
+              {hideMax ? value : `${value}/${max}`}
             </span>
           )}
         </div>

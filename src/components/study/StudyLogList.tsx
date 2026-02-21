@@ -1,6 +1,7 @@
 'use client';
 
 import { StudyLog } from '@/lib/types';
+import { formatLogContentForDisplay } from '@/lib/pet-utils';
 import Card from '@/components/ui/Card';
 import { History } from 'lucide-react';
 
@@ -37,7 +38,7 @@ export default function StudyLogList({ logs }: StudyLogListProps) {
             key={log.id}
             className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-700"
           >
-            <p className="whitespace-pre-wrap">{log.content}</p>
+            <p className="whitespace-pre-wrap">{formatLogContentForDisplay(log.content)}</p>
             <p className="text-xs text-gray-400 mt-1">
               {new Date(log.created_at).toLocaleDateString('ko-KR', {
                 month: 'short',

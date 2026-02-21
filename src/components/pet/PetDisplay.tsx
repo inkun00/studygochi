@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Pet } from '@/lib/types';
 import { calculateCurrentHunger, getPetStage, isPetDead, getExpProgress, calculateCurrentIntelligence } from '@/lib/pet-utils';
-import { EXP_TO_LEVEL_UP, MAX_HUNGER } from '@/lib/constants';
+import { EXP_TO_LEVEL_UP, MAX_HUNGER, MAX_INTELLIGENCE } from '@/lib/constants';
 import ProgressBar from '@/components/ui/ProgressBar';
 import SpeechBubble from '@/components/ui/SpeechBubble';
 import { getHungerBarColor } from '@/lib/pet-utils';
@@ -13,14 +13,16 @@ interface PetDisplayProps {
   message: string;
   isThinking?: boolean;
   sessionStartAt?: number | null;
+  /** 시간 경과에 따른 갱신(배고픔 등) - 주기적으로 바뀌는 값 넣으면 리렌더됨 */
+  statusTick?: number;
 }
 
-export default function PetDisplay({ pet, message, isThinking, sessionStartAt }: PetDisplayProps) {
-  const hunger = useMemo(() => calculateCurrentHunger(pet, sessionStartAt), [pet, sessionStartAt]);
-  const dead = useMemo(() => isPetDead(pet, sessionStartAt), [pet, sessionStartAt]);
+export default function PetDisplay({ pet, message, isThinking, sessionStartAt, statusTick }: PetDisplayProps) {
+  const hunger = useMemo(() => calculateCurrentHunger(pet, sessionStartAt), [pet, sessionStartAt, statusTick]);
+  const dead = useMemo(() => isPetDead(pet, sessionStartAt), [pet, sessionStartAt, statusTick]);
   const stage = useMemo(() => getPetStage(pet.level), [pet.level]);
   const expProgress = useMemo(() => getExpProgress(pet.experience), [pet.experience]);
-  const intelligence = useMemo(() => calculateCurrentIntelligence(pet, sessionStartAt), [pet, sessionStartAt]);
+  const intelligence = useMemo(() => calculateCurrentIntelligence(pet, sessionStartAt), [pet, sessionStartAt, statusTick]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -72,8 +74,8 @@ export default function PetDisplay({ pet, message, isThinking, sessionStartAt }:
         />
         <ProgressBar
           label="📚 지능"
-          value={intelligence}
-          max={Math.max(100, intelligence + 50)}
+          value={Math.min(intelligence, MAX_INTELLIGENCE)}
+          max={MAX_INTELLIGENCE}
           color="#4080ff"
         />
       </div>
