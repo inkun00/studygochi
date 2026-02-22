@@ -32,7 +32,7 @@ export default function PlayGameSelectScreen({ pet, onBack, onSelectGame }: Play
   const [cooldownUpdates, setCooldownUpdates] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setCooldownUpdates((n) => n + 1), 60 * 1000);
+    const id = setInterval(() => setCooldownUpdates((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
 

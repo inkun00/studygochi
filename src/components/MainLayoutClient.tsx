@@ -22,6 +22,7 @@ import ShopPageClient from '@/app/main/shop/ShopPageClient';
 import InteriorDecoratorScreen from '@/components/screens/InteriorDecoratorScreen';
 import { calculateNutritionScore, getNutritionStatus, NUTRIENT_COLORS, NUTRIENT_ICONS, NUTRIENT_LABELS, type NutrientKey } from '@/lib/food-constants';
 import { UI_SPRITES } from '@/lib/ui-sprites';
+import { canPlayGame, getRemainingCooldownMs, formatRemainingCooldown } from '@/lib/game-play-cooldown';
 
 type Screen = 'home' | 'menu' | 'study' | 'exam' | 'classroom' | 'shop' | 'feed' | 'grocery' | 'logs' | 'play' | 'chat' | 'decorate';
 
@@ -716,7 +717,10 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
       case 'menu':
         const BTN_PLAIN = '/sprites/ui/btn_plain_green.png';
-        const MENU_ROW_HEIGHT = 70; // 버튼 높이 (10% 확대)
+        const MENU_ROW_HEIGHT = 70;
+        const playRemainingMs = pet ? getRemainingCooldownMs(pet.id, 'multiplication') : 0;
+        const playOnCooldown = pet ? !canPlayGame(pet.id, 'multiplication') : false;
+        const playCooldownText = formatRemainingCooldown(playRemainingMs);
         return (
           <div className="w-full h-full overflow-hidden pt-[14px] px-3 grid grid-cols-3 gap-x-2 gap-y-2" style={{ background: '#fff8f0', paddingBottom: 0, marginBottom: '-36px', gridTemplateRows: `repeat(4, ${MENU_ROW_HEIGHT}px)` }}>
             {MENU_ITEMS.map((item, i) => (
@@ -727,7 +731,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                     setScreen(item.id);
                     if (ROUTE_SCREENS[`/main/${item.id}`]) router.push(`/main/${item.id}`);
                   }}
-                  className="flex flex-row items-center justify-center gap-0 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
+                  className="flex flex-col items-center justify-center gap-0 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
                   style={{
                     backgroundImage: `url(${BTN_PLAIN})`,
                     backgroundSize: '100% 100%',
@@ -744,6 +748,11 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                       {item.label}
                     </span>
                   </span>
+                  {item.id === 'play' && playOnCooldown && (
+                    <span className="text-[7px] leading-none" style={{ fontFamily: "'Press Start 2P'", color: '#e04040', transform: 'translateY(-6px)' }}>
+                      {playCooldownText} 후
+                    </span>
+                  )}
                 </button>
               </div>
             ))}
