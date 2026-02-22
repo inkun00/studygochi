@@ -20,11 +20,11 @@ interface PlayScreenWithGamesProps {
 
 const BOREDOM_REDUCTION_PER_SCORE = 0.1;
 
-/** 게임 점수 → 포인트 변환. 점수가 높을수록 포인트 증가 */
+/** 게임 점수 → 포인트 변환 (1/10 비율) */
 function scoreToPoints(score: number): number {
   if (score <= 0) return 0;
-  const base = Math.floor(score / 20);
-  const bonus = score >= 500 ? 15 : score >= 300 ? 8 : score >= 150 ? 3 : score >= 50 ? 1 : 0;
+  const base = Math.floor(score / 200);
+  const bonus = score >= 500 ? 1 : 0;
   return Math.max(1, base + bonus);
 }
 
