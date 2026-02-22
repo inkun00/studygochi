@@ -4,7 +4,24 @@ export type CharacterSprite =
   | 'rabbit' | 'tiger' | 'dog' | 'monkey' | 'elephant' | 'giraffe' | 'panda'
   | 'squirrel' | 'sloth' | 'wolf' | 'mouse' | 'hedgehog' | 'koala' | 'bear' | 'horse' | 'pig'
   | 'meerkat' | 'dessertFox' | 'racoon' | 'deer' | 'cat' | 'lion';
-export type RoomType = 'bedroom' | 'kitchen' | 'classroom' | 'shop';
+export type RoomType =
+  | 'room1'
+  | 'room2'
+  | 'room3'
+  | 'room4'
+  | 'room5'
+  | 'room6'
+  | 'room7'
+  | 'room8'
+  | 'room9'
+  | 'room10'
+  | 'room11'
+  | 'room12'
+  | 'room13'
+  | 'room14'
+  | 'room15'
+  | 'room16'
+  | 'room17';
 
 export type MBTIType =
   | 'INTJ' | 'INTP' | 'ENTJ' | 'ENTP'
@@ -22,6 +39,12 @@ export interface PetNutrition {
 
 export interface FoodInventory {
   [foodId: string]: number;
+}
+
+export interface PlacedInteriorItem {
+  itemId: string;
+  x: number; // 0-100 퍼센트
+  y: number;
 }
 
 export interface Pet {
@@ -44,6 +67,8 @@ export interface Pet {
   character_set?: CharacterSet;
   nutrition: PetNutrition;
   food_inventory: FoodInventory;
+  interior_inventory?: Record<string, number>;
+  placed_interior?: PlacedInteriorItem[];
   points: number;
   mbti?: MBTIType;
 }

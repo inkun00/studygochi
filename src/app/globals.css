@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -146,6 +146,28 @@ body {
   100% { background-position: 40px 40px; }
 }
 
+@keyframes block-explode {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.9; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes block-fall {
+  0% { transform: translateY(var(--fall-from, -400%)); opacity: 0.85; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes combo-pop {
+  0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+  30% { transform: translate(-50%, 0) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+.animate-combo-pop {
+  animation: combo-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+
 .animate-float-pet {
   animation: float-pet 2s ease-in-out infinite;
 }
@@ -164,6 +186,19 @@ body {
 
 .animate-menu-pop {
   animation: menu-pop 0.2s ease-out;
+}
+
+.block-explode {
+  animation: block-explode 0.45s ease-out forwards;
+}
+
+.block-fall {
+  animation: block-fall 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+/* 대화 입력창 띄어쓰기 너비 축소 (모바일) */
+.chat-input-space {
+  word-spacing: -0.25em;
 }
 
 .pixel-border {

@@ -4,6 +4,8 @@ export const INTELLIGENCE_PER_STUDY_CHAR = 10;
 /** 노트 저장 시 포인트: N자당 1P (예: 20자 → 1P, 100자 → 5P) */
 export const POINTS_PER_STUDY_CHAR = 20;
 export const MAX_STUDY_LOGS_FOR_EXAM = 5;
+/** 노트에 저장 가능한 최대 지식 개수 */
+export const MAX_STUDY_LOGS = 100;
 export const HUNGER_DECAY_RATE = 2; // 시간당 감소량
 export const INTELLIGENCE_DECAY_RATE = 1; // 시간당 지능 감소량 (학습 안 할 시)
 export const BOREDOM_INCREASE_RATE = 2; // 시간당 심심 지수 증가량 (놀기 안 할 시)
@@ -26,20 +28,7 @@ export const EXP_TO_LEVEL_UP = 200;
 export const EXP_PER_STUDY_CHAR = 2;
 /** 밥주기 경험치: 음식 가격에 비례 (FeedScreen에서 food.price 사용) */
 
-export const SHOP_ITEMS = {
-  revive_potion: {
-    name: '부활 포션',
-    description: '유령 상태의 펫을 부활시킵니다.',
-    price: 100,
-    emoji: '💊',
-  },
-  cheat_sheet: {
-    name: '컨닝 페이퍼',
-    description: '시험 시 AI에게 추가 지식을 제공합니다.',
-    price: 50,
-    emoji: '📝',
-  },
-} as const;
+export const SHOP_ITEMS = {} as const;
 
 export const POINT_PACKAGES = [
   { id: 'point_100', points: 100, price: 1000, label: '100P' },

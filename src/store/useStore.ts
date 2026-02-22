@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Pet, UserProfile, StudyLog, Exam, ExamResult } from '@/lib/types';
+import { MAX_STUDY_LOGS } from '@/lib/constants';
 
 interface AppState {
   // User
@@ -46,7 +47,9 @@ export const useStore = create<AppState>((set) => ({
   studyLogs: [],
   setStudyLogs: (studyLogs) => set({ studyLogs }),
   addStudyLog: (log) =>
-    set((state) => ({ studyLogs: [log, ...state.studyLogs] })),
+    set((state) => ({
+      studyLogs: [log, ...state.studyLogs].slice(0, MAX_STUDY_LOGS),
+    })),
 
   activeExam: null,
   setActiveExam: (activeExam) => set({ activeExam }),

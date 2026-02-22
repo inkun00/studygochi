@@ -6,6 +6,7 @@ import { FETCH_ALLOWLIST } from '@/lib/fetch-allowlist';
 import PixelPet from '@/components/pet/PixelPet';
 import { getCharacterSprite, getPetMBTI } from '@/lib/pet-constants';
 import { MAX_INTELLIGENCE, INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR, CHAT_EXCHANGES_PER_SESSION, CHAT_INPUT_MAX_LENGTH } from '@/lib/constants';
+import { ensureStudyLogsLimit } from '@/lib/study-logs';
 import { calculateLevel, canStudyOrChat, getStudyChatCooldownRemaining, isDuplicateOfExistingContent } from '@/lib/pet-utils';
 import type { Pet, StudyLog, UserProfile } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -156,6 +157,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
           if (summary && typeof summary === 'string' && summary.trim()) {
             const trimmed = summary.trim();
             if (!isDuplicateOfExistingContent(trimmed, studyLogs)) {
+              await ensureStudyLogsLimit(supabase, user.id);
               const { data: log } = await supabase
                 .from('study_logs')
                 .insert({ user_id: user.id, content: trimmed })
@@ -299,7 +301,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
             onKeyDown={handleKeyDown}
             placeholder={`메시지 (${CHAT_INPUT_MAX_LENGTH}자 이내)`}
             maxLength={CHAT_INPUT_MAX_LENGTH}
-            className="flex-1 max-w-[75%] px-1.5 py-1 rounded text-[12px] outline-none min-h-[40px]"
+            className="flex-1 max-w-[75%] px-1.5 py-1 rounded text-[12px] outline-none min-h-[40px] chat-input-space"
             style={{
               fontFamily: "'Press Start 2P'",
               border: '1px solid #ddd',

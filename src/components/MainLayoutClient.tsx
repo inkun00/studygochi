@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase-client';
 import { useStore } from '@/store/useStore';
 import { MAX_HUNGER } from '@/lib/constants';
@@ -12,16 +12,18 @@ import PixelRoom from '@/components/pet/PixelRoom';
 import { calculateCurrentHunger, isPetDead, getExpProgress, getPetStage, getPetStatusEmoji, calculateCurrentNutrition, calculateCurrentIntelligence, calculateCurrentBoredom, formatLogContentForDisplay } from '@/lib/pet-utils';
 import { EXP_TO_LEVEL_UP, MAX_HUNGER as MAX_H, MAX_BOREDOM as MAX_B, MAX_INTELLIGENCE, DEATH_PENALTY_MS, INTELLIGENCE_PER_STUDY_CHAR, BOREDOM_INCREASE_RATE, INTELLIGENCE_DECAY_RATE } from '@/lib/constants';
 import FeedScreen from '@/components/screens/FeedScreen';
-import { CHARACTER_SPRITES, pickRandomCharacter, pickRandomRoom, getCharacterSprite, getRoomType, getPetMBTI } from '@/lib/pet-constants';
+import { CHARACTER_SPRITES, ROOM_TYPES, ROOM_LABELS, BG_MAP, pickRandomCharacter, pickRandomRoom, getCharacterSprite, getRoomType, getPetMBTI } from '@/lib/pet-constants';
 import { pickRandomMBTI, getPetTouchMessage } from '@/lib/pet-messages';
 import type { CharacterSprite, RoomType } from '@/lib/types';
 import GroceryScreen from '@/components/screens/GroceryScreen';
 import ChatScreen from '@/components/screens/ChatScreen';
-import PlayScreen from '@/components/screens/PlayScreen';
+import PlayScreenWithGames from '@/components/games/PlayScreenWithGames';
+import ShopPageClient from '@/app/main/shop/ShopPageClient';
+import InteriorDecoratorScreen from '@/components/screens/InteriorDecoratorScreen';
 import { calculateNutritionScore, getNutritionStatus, NUTRIENT_COLORS, NUTRIENT_ICONS, NUTRIENT_LABELS, type NutrientKey } from '@/lib/food-constants';
 import { UI_SPRITES } from '@/lib/ui-sprites';
 
-type Screen = 'home' | 'menu' | 'study' | 'exam' | 'classroom' | 'shop' | 'feed' | 'grocery' | 'logs' | 'play' | 'chat';
+type Screen = 'home' | 'menu' | 'study' | 'exam' | 'classroom' | 'shop' | 'feed' | 'grocery' | 'logs' | 'play' | 'chat' | 'decorate';
 
 const MENU_ITEMS: { id: Screen; label: string; icon: string; color: string }[] = [
   { id: 'study', label: '공부', icon: '📖', color: '#ff8080' },
@@ -31,12 +33,21 @@ const MENU_ITEMS: { id: Screen; label: string; icon: string; color: string }[] =
   { id: 'exam', label: '시험', icon: '📝', color: '#ffe080' },
   { id: 'classroom', label: '교실', icon: '🏫', color: '#a0d8ff' },
   { id: 'shop', label: '상점', icon: '💎', color: '#d0a0ff' },
+  { id: 'decorate', label: '방꾸미기', icon: '🏠', color: '#80c0a0' },
   { id: 'logs', label: '노트', icon: '📋', color: '#ffa0c0' },
   { id: 'chat', label: '대화', icon: '💬', color: '#b0e0e6' },
 ];
 
+const ROUTE_SCREENS: Record<string, Screen> = {
+  '/main/study': 'study',
+  '/main/exam': 'exam',
+  '/main/classroom': 'classroom',
+  '/main/shop': 'shop',
+};
+
 export default function MainLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
   const { user, setUser, pet, setPet, studyLogs, setStudyLogs, addStudyLog, petMessage, setPetMessage, sessionStartAt, setSessionStartAt, setChatMessages } = useStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -56,6 +67,12 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
   const statusPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const petRef = useRef(pet);
   petRef.current = pet;
+
+  // URL 경로와 화면 상태 동기화 (직접 /main/shop 접근 등)
+  useEffect(() => {
+    const targetScreen = ROUTE_SCREENS[pathname];
+    if (targetScreen) setScreen(targetScreen);
+  }, [pathname]);
 
   // 5분마다 상태(배고픔·심심·지능·영양) 갱신 → 화면에 시간 경과 반영
   useEffect(() => {
@@ -388,8 +405,16 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
             >
               ‹
             </button>
-            <div className="flex items-center justify-center w-24 h-24 rounded-lg ui-panel">
-              <PixelPet isDead={false} size={56} characterSprite={previewCharacter ?? 'rabbit'} />
+            <div className="relative flex items-center justify-center w-24 h-24 rounded-lg overflow-hidden" style={{ background: '#e8e0d8' }}>
+              <img
+                src={BG_MAP[previewRoom ?? 'room1']}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <div className="relative z-10">
+                <PixelPet isDead={false} size={56} characterSprite={previewCharacter ?? 'rabbit'} />
+              </div>
             </div>
             <button
               type="button"
@@ -403,7 +428,31 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               ›
             </button>
           </div>
-          <p className="text-[10px] text-center" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>
+          <p className="text-[8px] text-center mt-1" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>
+            방을 선택하세요
+          </p>
+          <div className="flex flex-wrap justify-center gap-0.5 max-w-[280px] max-h-[80px] overflow-y-auto">
+            {ROOM_TYPES.map((rt) => (
+              <button
+                key={rt}
+                type="button"
+                onClick={() => setPreviewRoom(rt)}
+                className={`w-12 h-12 rounded border-2 overflow-hidden flex-shrink-0 transition-all ${
+                  (previewRoom ?? 'room1') === rt
+                    ? 'border-[#d06000] ring-1 ring-[#d06000]'
+                    : 'border-transparent hover:border-[#c0a080]'
+                }`}
+              >
+                <img
+                  src={BG_MAP[rt]}
+                  alt={ROOM_LABELS[rt]}
+                  className="w-full h-full object-cover"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-center mt-1" style={{ fontFamily: "'Press Start 2P'", color: '#a08060' }}>
             {(user?.display_name || '사용자').trim() || '사용자'}님, 펫 이름을 지어주세요
           </p>
           <input
@@ -512,7 +561,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               }}
               aria-label="펫 터치"
             >
-              <PixelRoom type={roomType} />
+              <PixelRoom type={roomType} placedInterior={pet.placed_interior} />
               {!dead ? (
                 <WalkingPet
                   isDead={dead}
@@ -674,7 +723,10 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               <div key={item.id} className="flex items-center justify-center" style={{ transform: 'scale(1)' }}>
                 <button
                   data-testid={`menu-${item.id}`}
-                  onClick={() => setScreen(item.id)}
+                  onClick={() => {
+                    setScreen(item.id);
+                    if (ROUTE_SCREENS[`/main/${item.id}`]) router.push(`/main/${item.id}`);
+                  }}
                   className="flex flex-row items-center justify-center gap-0 w-full h-full min-h-0 transition-transform active:scale-95 animate-menu-pop border-none rounded-[8px] overflow-hidden"
                   style={{
                     backgroundImage: `url(${BTN_PLAIN})`,
@@ -700,9 +752,13 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
       case 'play':
         return (
-          <PlayScreen
+          <PlayScreenWithGames
             pet={pet}
+            setPet={setPet}
+            supabase={supabase}
+            setPetMessage={setPetMessage}
             onBack={() => setScreen('menu')}
+            sessionStartAt={sessionStartAt}
           />
         );
 
@@ -812,9 +868,33 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
           />
         );
 
+      case 'decorate':
+        return (
+          <InteriorDecoratorScreen
+            pet={pet}
+            setPet={setPet}
+            onBack={() => setScreen('menu')}
+          />
+        );
+
+      case 'shop':
+        return (
+          <div className="w-full h-full flex flex-col animate-slide-in" style={{ background: '#fff8f0' }}>
+            <div className="flex items-center gap-1 p-2">
+              <button onClick={() => setScreen('menu')} className="text-[14px]" style={{ fontFamily: "'Press Start 2P'", color: '#d06000' }}>←</button>
+              <div className="flex-1 text-center py-1 rounded" style={{ background: '#d0a0ff', fontFamily: "'Press Start 2P'" }}>
+                <span className="text-[14px] text-white">상점</span>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              <ShopPageClient />
+            </div>
+          </div>
+        );
+
       default: {
         const screenLabels: Record<string, string> = {
-          study: '공부', exam: '시험', classroom: '교실', shop: '상점', logs: '노트', grocery: '쇼핑', play: '놀기', chat: '대화', feed: '식사',
+          study: '공부', exam: '시험', classroom: '교실', shop: '상점', decorate: '방꾸미기', logs: '노트', grocery: '쇼핑', play: '놀기', chat: '대화', feed: '식사',
         };
         return (
           <div className="w-full h-full flex flex-col animate-slide-in" style={{ background: '#fff8f0' }}>

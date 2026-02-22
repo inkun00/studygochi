@@ -31,6 +31,7 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
   const [category, setCategory] = useState<FoodCategory>('all');
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [buyQty, setBuyQty] = useState(1);
+  const [refundQty, setRefundQty] = useState(1);
   const points = pet.points || 0;
   const inventory = pet.food_inventory || {};
 
@@ -53,6 +54,30 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
     setPetMessage(`${food.emoji} ${food.name} ${qty}개 구매!`);
     setSelectedFood(null);
     setBuyQty(1);
+    setBuying(false);
+  };
+
+  const handleRefund = async (food: FoodItem, qty: number) => {
+    const owned = inventory[food.id] || 0;
+    const refundQty = Math.min(owned, qty);
+    if (refundQty <= 0 || buying) return;
+
+    setBuying(true);
+    const newCount = owned - refundQty;
+    const newInventory = { ...inventory, [food.id]: newCount };
+    if (newCount <= 0) delete newInventory[food.id];
+    const refundPoints = food.price * refundQty;
+    const newPoints = points + refundPoints;
+
+    await supabase.from('pets').update({
+      food_inventory: newInventory,
+      points: newPoints,
+    }).eq('id', pet.id);
+
+    setPet({ ...pet, food_inventory: newInventory, points: newPoints });
+    setPetMessage(`${food.emoji} ${food.name} ${refundQty}개 환불!`);
+    setRefundQty(1);
+    if (newCount <= 0) setSelectedFood(null);
     setBuying(false);
   };
 
@@ -102,7 +127,7 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
             return (
               <button
                 key={food.id}
-                onClick={() => { setSelectedFood(food); setBuyQty(1); }}
+                onClick={() => { setSelectedFood(food); setBuyQty(1); setRefundQty(1); }}
                 className="flex flex-col items-center p-1.5 rounded-lg transition-all active:scale-95"
                 style={{
                   background: selectedFood?.id === food.id ? '#ffe0a0' : '#fffaf0',
@@ -174,6 +199,33 @@ export default function GroceryScreen({ pet, setPet, supabase, setPetMessage, on
             >
               {buying ? '...' : `⭐${selectedFood.price * buyQty}P 구매`}
             </button>
+
+            {/* Refund section - when owned > 0 */}
+            {(inventory[selectedFood.id] || 0) > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <button
+                    onClick={() => setRefundQty((q) => Math.max(1, q - 1))}
+                    className="w-9 h-9 sm:w-6 sm:h-6 rounded text-[18px] sm:text-[12px] flex items-center justify-center"
+                    style={{ ...font, background: '#fff', border: '1px solid #c0c0c0', color: '#805030' }}
+                  >-</button>
+                  <span className="text-[11px] sm:text-[7px]" style={{ ...font, color: '#805030' }}>환불 {refundQty}개</span>
+                  <button
+                    onClick={() => setRefundQty((q) => Math.min(inventory[selectedFood.id] || 0, q + 1))}
+                    className="w-9 h-9 sm:w-6 sm:h-6 rounded text-[18px] sm:text-[12px] flex items-center justify-center"
+                    style={{ ...font, background: '#fff', border: '1px solid #c0c0c0', color: '#805030' }}
+                  >+</button>
+                </div>
+                <button
+                  onClick={() => handleRefund(selectedFood, refundQty)}
+                  disabled={buying || refundQty <= 0 || refundQty > (inventory[selectedFood.id] || 0)}
+                  className="pixel-btn w-full py-1.5 text-[14px] sm:text-[9px] disabled:opacity-40"
+                  style={{ ...font, background: '#ffe8e8', color: '#803030', borderColor: '#c08080' }}
+                >
+                  {buying ? '...' : `↩ ${selectedFood.price * refundQty}P 환불`}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -38,3 +38,18 @@ ALTER TABLE pets ALTER COLUMN character_sprite SET DEFAULT 'rabbit';
 
 -- 010: 공부/대화 1시간 쿨다운용 last_activity_at
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS last_activity_at timestamptz;
+
+-- 011: room_type room1~room10으로 변경 (제약 먼저 제거 → UPDATE → 새 제약)
+ALTER TABLE pets DROP CONSTRAINT IF EXISTS pets_room_type_check;
+UPDATE pets SET room_type = 'room1' WHERE room_type = 'bedroom';
+UPDATE pets SET room_type = 'room2' WHERE room_type = 'kitchen';
+UPDATE pets SET room_type = 'room3' WHERE room_type = 'classroom';
+UPDATE pets SET room_type = 'room4' WHERE room_type = 'shop';
+ALTER TABLE pets ADD CONSTRAINT pets_room_type_check CHECK (
+  room_type IN ('room1','room2','room3','room4','room5','room6','room7','room8','room9','room10','room11','room12','room13','room14','room15','room16','room17')
+);
+ALTER TABLE pets ALTER COLUMN room_type SET DEFAULT 'room1';
+
+-- 012: 인테리어 인벤토리 및 배치
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS interior_inventory jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS placed_interior jsonb NOT NULL DEFAULT '[]';

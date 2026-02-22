@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { useStore } from '@/store/useStore';
 import { MAX_STUDY_LENGTH, MAX_INTELLIGENCE, INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR, EXP_TO_LEVEL_UP } from '@/lib/constants';
+import { ensureStudyLogsLimit } from '@/lib/study-logs';
 import { calculateLevel, canStudyOrChat, getStudyChatCooldownRemaining } from '@/lib/pet-utils';
 
 export default function StudyPageClient() {
@@ -23,6 +24,7 @@ export default function StudyPageClient() {
     setIsSubmitting(true);
 
     try {
+      await ensureStudyLogsLimit(supabase, user.id);
       const { data: log } = await supabase.from('study_logs').insert({ user_id: user.id, content: content.trim() }).select().single();
       if (log) addStudyLog(log);
 
@@ -67,6 +69,8 @@ export default function StudyPageClient() {
           background: '#fff',
           color: '#805030',
           outline: 'none',
+          letterSpacing: '-0.05em',
+          wordSpacing: '-0.1em',
         }}
       />
       <div className="flex justify-between items-center gap-2">

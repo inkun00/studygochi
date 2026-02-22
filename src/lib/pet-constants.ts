@@ -14,7 +14,45 @@ export const CHARACTER_SPRITES: CharacterSprite[] = [
   'meerkat', 'dessertFox', 'racoon', 'deer', 'cat', 'lion',
 ];
 
-export const ROOM_TYPES: RoomType[] = ['bedroom', 'kitchen', 'classroom', 'shop'];
+export const ROOM_TYPES: RoomType[] = [
+  'room1',
+  'room2',
+  'room3',
+  'room4',
+  'room5',
+  'room6',
+  'room7',
+  'room8',
+  'room9',
+  'room10',
+  'room11',
+  'room12',
+  'room13',
+  'room14',
+  'room15',
+  'room16',
+  'room17',
+];
+
+export const ROOM_LABELS: Record<RoomType, string> = {
+  room1: '방 1',
+  room2: '방 2',
+  room3: '방 3',
+  room4: '방 4',
+  room5: '방 5',
+  room6: '방 6',
+  room7: '방 7',
+  room8: '방 8',
+  room9: '방 9',
+  room10: '방 10',
+  room11: '방 11',
+  room12: '방 12',
+  room13: '방 13',
+  room14: '방 14',
+  room15: '방 15',
+  room16: '방 16',
+  room17: '방 17',
+};
 
 export const SPRITE_SHEET_MAP: Record<CharacterSprite, string> = {
   rabbit: '/sprites/pet/RABBITSPRITESHEET.png',
@@ -166,10 +204,23 @@ export const SPRITE_ROW_MAP: Record<CharacterSprite, SpriteRowMap> = {
 };
 
 export const BG_MAP: Record<RoomType, string> = {
-  bedroom: '/sprites/bg-bedroom.png',
-  kitchen: '/sprites/bg-kitchen.png',
-  classroom: '/sprites/bg-classroom.png',
-  shop: '/sprites/bg-shop.png',
+  room1: '/sprites/bg1.png',
+  room2: '/sprites/bg2.png',
+  room3: '/sprites/bg3.png',
+  room4: '/sprites/bg4.png',
+  room5: '/sprites/bg5.png',
+  room6: '/sprites/bg6.png',
+  room7: '/sprites/bg7.png',
+  room8: '/sprites/bg8.png',
+  room9: '/sprites/bg9.png',
+  room10: '/sprites/bg10.png',
+  room11: '/sprites/bg11.png',
+  room12: '/sprites/bg12.png',
+  room13: '/sprites/bg13.png',
+  room14: '/sprites/bg14.png',
+  room15: '/sprites/bg15.png',
+  room16: '/sprites/bg16.png',
+  room17: '/sprites/bg17.png',
 };
 
 const VALID_SPRITES: CharacterSprite[] = [
@@ -196,8 +247,18 @@ export function getCharacterSprite(pet: { character_sprite?: string; character_s
   return 'rabbit';
 }
 
-export function getRoomType(pet: { room_type?: RoomType }): RoomType {
-  return pet.room_type ?? 'bedroom';
+const LEGACY_ROOM_MAP: Record<string, RoomType> = {
+  bedroom: 'room1',
+  kitchen: 'room2',
+  classroom: 'room3',
+  shop: 'room4',
+};
+
+export function getRoomType(pet: { room_type?: string }): RoomType {
+  const rt = pet.room_type;
+  if (rt && ROOM_TYPES.includes(rt as RoomType)) return rt as RoomType;
+  if (rt && rt in LEGACY_ROOM_MAP) return LEGACY_ROOM_MAP[rt];
+  return 'room1';
 }
 
 function hashToMBTI(id: string): MBTIType {

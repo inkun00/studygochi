@@ -16,8 +16,8 @@ interface WalkingPetProps {
 const COLS = 4;
 const BOUND_LEFT = 12;
 const BOUND_RIGHT = 88;
-const Y_MIN = 74;
-const Y_MAX = 82;
+const Y_MIN = 64;  // 44 + 20 (상단 20p 내려 벽 넘어감 방지)
+const Y_MAX = 95;  // 하단
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -37,6 +37,8 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
   const idleFaceRef = useRef<'front' | 'back' | 'left' | 'right'>('right');
   const idleFrameTickRef = useRef(0);
   const targetXRef = useRef<number | null>(null);
+  const targetYRef = useRef<number | null>(null);
+  const verticalDirRef = useRef<'up' | 'down' | null>(null);
   const lastTickNowRef = useRef(0);
   dirRef.current = dir;
 
@@ -53,6 +55,16 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
   const frameBack = FRAME_IDLE_BACK_MAP[characterSprite];
   const getBgPos = () => {
     if (!isIdle) {
+      // 위/아래 이동 시 back(위) 또는 front(아래) 스프라이트
+      const vDir = verticalDirRef.current;
+      if (vDir === 'up') {
+        const cell = frameBack[frame % frameBack.length];
+        return { x: -cell.c * size, y: -cell.r * size };
+      }
+      if (vDir === 'down') {
+        const cell = frameFront[frame % frameFront.length];
+        return { x: -cell.c * size, y: -cell.r * size };
+      }
       const r = dir === 'right' ? rows.rowRight : rows.rowLeft;
       return { x: -(frame % COLS) * size, y: -r * size };
     }
@@ -74,6 +86,7 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
   };
   const { x: bgPosX, y: bgPosY } = getBgPos();
   const topOffset = rows.topOffset ?? 0;
+  const bounceY = !isIdle ? (frame % 4 === 1 ? 2 : frame % 4 === 3 ? -1 : 0) : 0;
 
   useEffect(() => {
     const TICK = 80;
@@ -99,29 +112,57 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
 
       let moveDir = dirRef.current;
       const t = targetXRef.current;
+      const tY = targetYRef.current;
 
-      if (t !== null) {
+      if (t !== null || tY !== null) {
         setPos(p => {
-          const dist = Math.abs(t - p.x);
-          const step = rand(0.2, 0.5);
           let nx = p.x;
-          if (dist < step) {
-            nx = t;
-            targetXRef.current = null;
+          let ny = p.y;
+          verticalDirRef.current = null;
+
+          if (t !== null) {
+            const distX = Math.abs(t - p.x);
+            const stepX = rand(0.2, 0.5);
+            if (distX < stepX) {
+              nx = t;
+              targetXRef.current = null;
+            } else {
+              nx = p.x + (t > p.x ? stepX : -stepX);
+              moveDir = t > p.x ? 'right' : 'left';
+              setDir(moveDir);
+              dirRef.current = moveDir;
+            }
           } else {
-            nx = p.x + (t > p.x ? step : -step);
-            moveDir = t > p.x ? 'right' : 'left';
-            setDir(moveDir);
-            dirRef.current = moveDir;
+            const stepX = moveDir === 'right' ? rand(0.25, 0.55) : -rand(0.25, 0.55);
+            nx = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, p.x + stepX));
           }
-          let ny = p.y + rand(-0.08, 0.08);
-          ny = Math.max(Y_MIN, Math.min(Y_MAX, ny));
+
+          if (tY !== null) {
+            const distY = Math.abs(tY - p.y);
+            const stepY = rand(0.15, 0.4);
+            if (distY < stepY) {
+              ny = tY;
+              targetYRef.current = null;
+            } else {
+              ny = p.y + (tY > p.y ? stepY : -stepY);
+              verticalDirRef.current = tY > p.y ? 'down' : 'up';
+            }
+            ny = Math.max(Y_MIN, Math.min(Y_MAX, ny));
+          } else {
+            ny = p.y + rand(-0.08, 0.08);
+            ny = Math.max(Y_MIN, Math.min(Y_MAX, ny));
+          }
+
           return { x: nx, y: ny };
         });
       } else {
         if (Math.random() < 0.06) {
           targetXRef.current = rand(BOUND_LEFT + 5, BOUND_RIGHT - 5);
-        } else if (Math.random() < 0.1) {
+        }
+        if (Math.random() < 0.05) {
+          targetYRef.current = rand(Y_MIN + 3, Y_MAX - 3);
+        }
+        if (targetXRef.current === null && Math.random() < 0.1) {
           moveDir = moveDir === 'right' ? 'left' : 'right';
           setDir(moveDir);
           dirRef.current = moveDir;
@@ -142,12 +183,17 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
           }
 
           let ny = p.y;
-          if (Math.random() < 0.04) {
+          const vy = targetYRef.current;
+          if (vy !== null) {
+            const stepY = rand(0.15, 0.4);
+            ny = p.y + (vy > p.y ? stepY : -stepY);
+            verticalDirRef.current = vy > p.y ? 'down' : 'up';
+          } else if (Math.random() < 0.06) {
             ny = rand(Y_MIN, Y_MAX);
           } else {
-            ny = p.y + rand(-0.12, 0.12);
-            ny = Math.max(Y_MIN, Math.min(Y_MAX, ny));
+            ny = p.y + rand(-0.15, 0.15);
           }
+          ny = Math.max(Y_MIN, Math.min(Y_MAX, ny));
 
           return { x: nx, y: ny };
         });
@@ -169,7 +215,7 @@ export default function WalkingPet({ isDead, characterSprite = 'rabbit', size = 
   return (
     <div
       className="absolute z-10 flex flex-col items-center overflow-visible"
-      style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: size, height: size, transform: 'translate(-50%, -50%)' }}
+      style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: size, height: size, transform: `translate(-50%, calc(-50% + ${bounceY}px))` }}
     >
       {/* 터치 시 상태 풍선 - 캐릭터 머리 바로 위 (overflow-visible로 팝업이 잘리지 않음) */}
       {floatingEmoji && (
