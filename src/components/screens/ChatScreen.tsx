@@ -7,7 +7,7 @@ import PixelPet from '@/components/pet/PixelPet';
 import { getCharacterSprite, getPetMBTI } from '@/lib/pet-constants';
 import { MAX_INTELLIGENCE, INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR, CHAT_EXCHANGES_PER_SESSION, CHAT_INPUT_MAX_LENGTH } from '@/lib/constants';
 import { ensureStudyLogsLimit } from '@/lib/study-logs';
-import { calculateLevel, canStudyOrChat, getStudyChatCooldownRemaining, isDuplicateOfExistingContent } from '@/lib/pet-utils';
+import { calculateLevel, canChat, getChatCooldownRemaining, isDuplicateOfExistingContent } from '@/lib/pet-utils';
 import type { Pet, StudyLog, UserProfile } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -46,13 +46,13 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
     const count = chatMessages.filter((m) => m.role === 'pet').length;
     return count >= CHAT_EXCHANGES_PER_SESSION;
   });
-  const [remainingMs, setRemainingMs] = useState(() => getStudyChatCooldownRemaining(pet));
+  const [remainingMs, setRemainingMs] = useState(() => getChatCooldownRemaining(pet));
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const onCooldown = !canStudyOrChat(pet);
+  const onCooldown = !canChat(pet);
   const exchangeCount = messages.filter((m) => m.role === 'pet').length;
 
-  // 진입 시 DB에서 pet 재조회 → last_activity_at 정확히 반영 (나갔다 들어올 때 쿨다운 우회 방지)
+  // 진입 시 DB에서 pet 재조회 → last_chat_at 정확히 반영
   useEffect(() => {
     if (!pet?.id) return;
     let cancelled = false;
@@ -76,7 +76,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
       setRemainingMs(0);
       return;
     }
-    const update = () => setRemainingMs(getStudyChatCooldownRemaining(pet));
+    const update = () => setRemainingMs(getChatCooldownRemaining(pet));
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
@@ -139,9 +139,9 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
       if (newExchangeCount >= CHAT_EXCHANGES_PER_SESSION) {
         setSessionComplete(true);
         setChatMessages([]);
-        const lastActivityAt = new Date().toISOString();
-        await supabase.from('pets').update({ last_activity_at: lastActivityAt }).eq('id', pet.id);
-        setPet({ ...pet, last_activity_at: lastActivityAt });
+        const lastChatAt = new Date().toISOString();
+        await supabase.from('pets').update({ last_chat_at: lastChatAt }).eq('id', pet.id);
+        setPet({ ...pet, last_chat_at: lastChatAt });
       }
 
       // 학습 관련 내용만 요약해서 노트에 저장
@@ -236,7 +236,7 @@ export default function ChatScreen({ pet, studyLogs, userName = '사용자', use
             </p>
           </div>
         )}
-        {messages.length === 0 && canStudyOrChat(pet) && (
+        {messages.length === 0 && canChat(pet) && (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
             <p className="text-[10px] mb-2" style={{ fontFamily: "'Press Start 2P'", color: '#666' }}>
               {pet.name}에게 말해보세요!

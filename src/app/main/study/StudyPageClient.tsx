@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-client';
 import { useStore } from '@/store/useStore';
 import { MAX_STUDY_LENGTH, MAX_INTELLIGENCE, INTELLIGENCE_PER_STUDY_CHAR, POINTS_PER_STUDY_CHAR, EXP_PER_STUDY_CHAR, EXP_TO_LEVEL_UP } from '@/lib/constants';
 import { ensureStudyLogsLimit } from '@/lib/study-logs';
-import { calculateLevel, canStudyOrChat, getStudyChatCooldownRemaining } from '@/lib/pet-utils';
+import { calculateLevel, canStudy, getStudyCooldownRemaining } from '@/lib/pet-utils';
 
 export default function StudyPageClient() {
   const supabase = createClient();
@@ -15,8 +15,8 @@ export default function StudyPageClient() {
 
   const handleStudy = useCallback(async () => {
     if (!pet || !user || !content.trim()) return;
-    if (!canStudyOrChat(pet)) {
-      const remaining = getStudyChatCooldownRemaining(pet);
+    if (!canStudy(pet)) {
+      const remaining = getStudyCooldownRemaining(pet);
       const min = Math.ceil(remaining / 60000);
       setPetMessage(`1시간 쿨다운! ${min}분 후 가르칠 수 있어요.`);
       return;
@@ -74,9 +74,9 @@ export default function StudyPageClient() {
         }}
       />
       <div className="flex justify-between items-center gap-2">
-        {pet && !canStudyOrChat(pet) ? (
+        {pet && !canStudy(pet) ? (
           <span className="text-[8px]" style={{ fontFamily: "'Press Start 2P'", color: '#e04040' }}>
-            {Math.ceil(getStudyChatCooldownRemaining(pet) / 60000)}분 후 가르치기 가능
+            {Math.ceil(getStudyCooldownRemaining(pet) / 60000)}분 후 가르치기 가능
           </span>
         ) : (
           <span className="text-[10px]" style={{ fontFamily: "'Press Start 2P'", color: remaining < 50 ? '#ff4040' : '#a08060' }}>
@@ -86,7 +86,7 @@ export default function StudyPageClient() {
         <button
           data-testid="study-submit"
           onClick={handleStudy}
-          disabled={!content.trim() || isSubmitting || !pet || !canStudyOrChat(pet)}
+          disabled={!content.trim() || isSubmitting || !pet || !canStudy(pet)}
           className="pixel-btn px-3 py-1.5 text-[12px] disabled:opacity-40"
           style={{ fontFamily: "'Press Start 2P'", background: '#c0ffc0', color: '#308030', borderColor: '#60a060' }}
         >

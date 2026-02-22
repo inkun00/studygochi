@@ -53,3 +53,6 @@ ALTER TABLE pets ALTER COLUMN room_type SET DEFAULT 'room1';
 -- 012: 인테리어 인벤토리 및 배치
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS interior_inventory jsonb NOT NULL DEFAULT '{}';
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS placed_interior jsonb NOT NULL DEFAULT '[]';
+
+-- 014: 대화 전용 쿨다운 컬럼
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS last_chat_at timestamptz;

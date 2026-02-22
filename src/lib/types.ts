@@ -60,6 +60,7 @@ export interface Pet {
   last_studied_at?: string;
   last_played_at?: string;
   last_activity_at?: string;
+  last_chat_at?: string;
   died_at?: string;
   created_at: string;
   character_sprite?: CharacterSprite;

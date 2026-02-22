@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { petId, hunger, nutrition, last_fed_at, last_played_at, last_studied_at, last_activity_at } = body;
+    const { petId, hunger, nutrition, last_fed_at, last_played_at, last_studied_at, last_activity_at, last_chat_at } = body;
 
     if (!petId || typeof hunger !== 'number') {
       return NextResponse.json({ error: '유효하지 않은 데이터' }, { status: 400 });
@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
     }
     if (last_activity_at) {
       updates.last_activity_at = last_activity_at;
+    }
+    if (last_chat_at) {
+      updates.last_chat_at = last_chat_at;
     }
 
     const { error } = await supabase

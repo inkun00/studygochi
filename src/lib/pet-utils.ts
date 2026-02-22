@@ -74,19 +74,32 @@ export function isPetDead(pet: Pet, sessionStartAt?: number | null): boolean {
   return false;
 }
 
-/** 공부/대화 쿨다운 경과 여부 (1시간 지났으면 true, last_activity_at 없으면 가능) */
-export function canStudyOrChat(pet: Pet): boolean {
+/** 공부 쿨다운 경과 여부 */
+export function canStudy(pet: Pet): boolean {
   if (!pet.last_activity_at) return true;
   const last = new Date(pet.last_activity_at).getTime();
   return Date.now() - last >= STUDY_CHAT_COOLDOWN_MS;
 }
 
-/** 쿨다운 남은 시간(ms), 0이면 사용 가능 */
-export function getStudyChatCooldownRemaining(pet: Pet): number {
+/** 공부 쿨다운 남은 시간(ms) */
+export function getStudyCooldownRemaining(pet: Pet): number {
   if (!pet.last_activity_at) return 0;
   const last = new Date(pet.last_activity_at).getTime();
-  const elapsed = Date.now() - last;
-  return Math.max(0, STUDY_CHAT_COOLDOWN_MS - elapsed);
+  return Math.max(0, STUDY_CHAT_COOLDOWN_MS - (Date.now() - last));
+}
+
+/** 대화 쿨다운 경과 여부 */
+export function canChat(pet: Pet): boolean {
+  if (!pet.last_chat_at) return true;
+  const last = new Date(pet.last_chat_at).getTime();
+  return Date.now() - last >= STUDY_CHAT_COOLDOWN_MS;
+}
+
+/** 대화 쿨다운 남은 시간(ms) */
+export function getChatCooldownRemaining(pet: Pet): number {
+  if (!pet.last_chat_at) return 0;
+  const last = new Date(pet.last_chat_at).getTime();
+  return Math.max(0, STUDY_CHAT_COOLDOWN_MS - (Date.now() - last));
 }
 
 export function getPetStage(level: number): { minLevel: number; name: string; emoji: string } {
